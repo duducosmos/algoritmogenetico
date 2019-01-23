@@ -6,9 +6,10 @@ Gerador aleatório de população.
 Programa sob licença GNU V.3.
 Desenvolvido por: E. S. Pereira.
 Versão 0.0.1.
-""""
+"""
 
-from numpy import randint
+from numpy.random import randint
+from numpy import argsort
 
 class Populacao:
     """
@@ -29,7 +30,12 @@ class Populacao:
 
     def gerar_populacao(self):
         """Gerador aleatório de população."""
-
-        self.populacao = randint(0, 2, size=(self.cromossos_totais,
-                                             self.tamanho_populacao
-                                             ), dtype='b')
+        self.populacao = randint(0, 2, size=(self.tamanho_populacao,
+                                             self.cromossos_totais),
+                                             dtype='b')
+    def avaliar(self):
+        """Avalia e ordena a população."""
+        valores = self.avaliacao(self.populacao)
+        ind = argsort(valores)
+        self.populacao[:] = self.populacao[ind]
+        return valores[ind]
