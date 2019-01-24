@@ -9,8 +9,8 @@ Versão 0.0.1.
 """
 from numpy import exp, array, mgrid
 from pygenic.populacao import Populacao
-from pygenic.selecao.roleta import Roleta
 from pygenic.selecao.torneio import Torneio
+from pygenic.cruzamento.kpontos import KPontos
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
@@ -53,7 +53,10 @@ populacao = Populacao(avaliacao, cromossos_totais, tamanho_populacao)
 populacao.gerar_populacao()
 
 classificacao = Torneio(populacao, tamanho=10)
-pop = classificacao.selecao(10)
+subpopulacao = classificacao.selecao(10)
+
+kpontos = KPontos(tamanho_populacao)
+pop = kpontos.descendentes(subpopulacao, pcruz=0.5)
 
 x, y = xy(pop)
 

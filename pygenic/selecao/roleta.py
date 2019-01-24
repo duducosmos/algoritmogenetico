@@ -11,7 +11,10 @@ Versão 0.0.1.
 from numpy.random import random
 from numpy import array
 
-class Roleta:
+from .selecao import Selecao
+
+
+class Roleta(Selecao):
     """
     Seleciona indivíduos para cruzamento usando
     roleta de seleção.
@@ -19,9 +22,9 @@ class Roleta:
         populacao - Objeto criado a partir da classe Populacao.
     """
     def __init__(self, populacao):
-        self.populacao = populacao
+        super(Roleta, self).__init__(populacao)
 
-    def roleta(self):
+    def selecionar(self):
         """Roleta de seleção de indivíduos."""
         fitness = self.populacao.avaliar()
         fmin = fitness.min()
@@ -38,12 +41,3 @@ class Roleta:
                 break
             i += 1
         return i - 1
-
-    def selecao(self, n):
-        """
-        Retorna uma população de tamanho n,
-        selecionanda via roleta.
-        """
-        progenitores = array([self.roleta()
-                              for _ in range(n)])
-        return self.populacao.populacao[progenitores]

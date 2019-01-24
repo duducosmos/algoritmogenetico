@@ -10,8 +10,10 @@ Versão 0.0.1.
 
 from numpy.random import choice
 from numpy import array, where
+from .selecao import Selecao
 
-class Torneio:
+
+class Torneio(Selecao):
     """
     Seleciona indivíduos para cruzamento usando
     Torneio.
@@ -19,22 +21,13 @@ class Torneio:
         populacao - Objeto criado a partir da classe Populacao.
     """
     def __init__(self, populacao, tamanho=10):
-        self.populacao = populacao
+        super(Torneio, self).__init__(populacao)
         self.tamanho = tamanho
 
-    def torneio(self):
+    def selecionar(self):
         """Retorna o indivíduo campeão da rodada."""
         fitness = self.populacao.avaliar()
         grupo = choice(fitness, size=self.tamanho)
         campeao = grupo.max()
         i = where(fitness == campeao)[0][0]
         return i
-
-    def selecao(self, n):
-        """
-        Retorna uma população de tamanho n,
-        selecionanda via roleta.
-        """
-        progenitores = array([self.torneio()
-                              for _ in range(n)])
-        return self.populacao.populacao[progenitores]

@@ -11,8 +11,9 @@ Versão 0.0.1.
 from numpy.random import random
 from numpy import array, argsort
 
+from .selecao import Selecao
 
-class Classificacao:
+class Classificacao(Selecao):
     """
     Seleciona indivíduos para cruzamento usando
     Classificação.
@@ -20,9 +21,9 @@ class Classificacao:
         populacao - Objeto criado a partir da classe Populacao.
     """
     def __init__(self, populacao):
-        self.populacao = populacao
+        super(Classificacao, self).__init__(populacao)
 
-    def roleta(self):
+    def selecionar(self):
         """Roleta de seleção de indivíduos."""
         fitness = self.populacao.avaliar()
         classificacao = argsort(fitness) + 1
@@ -38,12 +39,3 @@ class Classificacao:
                 break
             i += 1
         return i - 1
-
-    def selecao(self, n):
-        """
-        Retorna uma população de tamanho n,
-        selecionanda via roleta.
-        """
-        progenitores = array([self.roleta()
-                              for _ in range(n)])
-        return self.populacao.populacao[progenitores]
