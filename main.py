@@ -1,25 +1,34 @@
 #!/usr/bin/env python3.6
 # -*- Coding: UTF-8 -*-
+"""
+Obetenção de máximo de função.
+
+Programa sob licença GNU V.3.
+Desenvolvido por: E. S. Pereira.
+Versão 0.0.1.
+"""
+from numpy import exp, array, mgrid
+from pygenic.populacao import Populacao
+from pygenic.selecao.roleta import Roleta
+from pygenic.selecao.torneio import Torneio
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
-import numpy as np
 
 
-from pygenic.populacao import Populacao
+def func(x, y):
+    tmp = 3 * exp(-(y + 1) ** 2 - x **2)*(x - 1)**2 \
+          - (exp(-(x+ 1) ** 2 - y **2) / 3 )\
+          + exp(-x **2 - y ** 2) * (10 * x **3 - 2 * x + 10 * y ** 5)
+    return tmp
 
-
-
-func = lambda x, y: (3 * np.exp(-(y + 1) ** 2 - x **2)*(x - 1)**2
-                 - (np.exp(-(x+ 1) ** 2 - y **2) / 3 )
-                 + np.exp(-x **2 - y ** 2) * (10 * x **3 - 2 * x + 10 * y ** 5)
-                )
 
 def bin(x):
-    cnt = np.array([2 ** i for i in range(x.shape[1])])
-    return np.array([sum(cnt * x[i,:]) for i in range(x.shape[0])])
+    cnt = array([2 ** i for i in range(x.shape[1])])
+    return array([(cnt * x[i,:]).sum() for i in range(x.shape[0])])
 
-def avaliacao(populacao):
+
+def xy(populacao):
     colunas = populacao.shape[1]
     meio = int(colunas / 2)
     const = 2.0 ** meio - 1.0
@@ -28,22 +37,31 @@ def avaliacao(populacao):
     const = (nmax - nmin) / const
     x = nmin + const * bin(populacao[:,:meio])
     y = nmin + const * bin(populacao[:,meio:])
+    return x, y
+
+
+def avaliacao(populacao):
+    x, y = xy(populacao)
     tmp = func(x, y)
     return tmp
 
+
 cromossos_totais = 8
-tamanho_populacao = 5
+tamanho_populacao = 100
 
 populacao = Populacao(avaliacao, cromossos_totais, tamanho_populacao)
 populacao.gerar_populacao()
-populacao.avaliar()
 
+classificacao = Torneio(populacao, tamanho=10)
+pop = classificacao.selecao(10)
+
+x, y = xy(pop)
 
 fig = plt.figure(figsize=(100, 100))
 ax = fig.add_subplot(111, projection="3d")
-X, Y = np.mgrid[-3:3:30j, -3:3:30j]
+X, Y = mgrid[-3:3:30j, -3:3:30j]
 Z = func(X,Y)
 
 ax.plot_wireframe(X, Y, Z)
-#ax.scatter(x, y, func(x, y), s=10, c='red', marker='D')
+ax.scatter(x, y, func(x, y), s=50, c='red', marker='D')
 plt.show()
