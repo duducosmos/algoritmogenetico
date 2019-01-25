@@ -11,6 +11,8 @@ from numpy import exp, array, mgrid
 from pygenic.populacao import Populacao
 from pygenic.selecao.torneio import Torneio
 from pygenic.cruzamento.embaralhamento import Embaralhamento
+from pygenic.mutacao.mutacaoflip import Mutacaoflip
+from pygenic.mutacao.mutacaoduplatroca import Mutacaoduplatroca
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
@@ -57,6 +59,17 @@ subpopulacao = classificacao.selecao(10)
 
 embaralhamento = Embaralhamento(tamanho_populacao)
 pop = embaralhamento.descendentes(subpopulacao, pcruz=0.5)
+
+p0 = pop.copy()
+
+mutacao = Mutacaoduplatroca(pop, pmut=0.1)
+mutacao.mutacao()
+
+p2 = p0 == pop
+
+print(p2.all())
+#mutacaoflip = Mutacaoflip(pop, pmut=0.1)
+#mutacaoflip.mutacao()
 
 x, y = xy(pop)
 
