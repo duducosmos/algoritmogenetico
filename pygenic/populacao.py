@@ -27,6 +27,7 @@ class Populacao:
         self.avaliacao = avaliacao
         self.cromossos_totais = cromossos_totais
         self.tamanho_populacao = tamanho_populacao
+        self.gerar_populacao()
 
     def gerar_populacao(self):
         """Gerador aleatório de população."""
@@ -38,4 +39,5 @@ class Populacao:
         valores = self.avaliacao(self.populacao)
         ind = argsort(valores)
         self.populacao[:] = self.populacao[ind]
+        valores = valores[ind]
         return valores[ind]

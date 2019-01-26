@@ -14,7 +14,7 @@ from numpy import array
 from .mutacao import Mutacao
 
 
-class Mutacaoduplatroca(Mutacao):
+class DuplaTroca(Mutacao):
     """
     Mutaçao dupla troca.
 
@@ -22,15 +22,15 @@ class Mutacaoduplatroca(Mutacao):
         populacao - vetor de população que deverá sofrer mutação.
         pmut - probabilidade de ocorrer uma mutação.
     """
-    def __init__(self, populacao, pmut):
-        super(Mutacaoduplatroca, self).__init__(populacao, pmut)
+    def __init__(self, pmut):
+        super(DuplaTroca, self).__init__(pmut)
 
     def mutacao(self):
         """Alteração genética de membros da população usando dupla troca."""
         nmut = self.selecao()
+        if nmut.size != 0:
+            gen1 = array([randint(0, self.ngen - 1) for _ in nmut])
+            gen2 = array([randint(0, self.ngen - 1) for _ in nmut])
 
-        gen1 = array([randint(0, self.ngen - 1)])
-        gen2 = array([randint(0, self.ngen - 1)])
-
-        self.populacao[nmut, gen1], self.populacao[nmut, gen2] = \
-        self.populacao[nmut, gen2], self.populacao[nmut, gen1]
+            self.populacao[nmut, gen1], self.populacao[nmut, gen2] = \
+            self.populacao[nmut, gen2], self.populacao[nmut, gen1]

@@ -41,7 +41,7 @@ class Embaralhamento(Cruzamento):
 
         order = list(range(n1))
         shuffle(order)
-        
+
         ponto = randint(1, n1 - 1)
         desc1 = progenitor1.copy()
         desc2 = progenitor2.copy()
@@ -49,16 +49,13 @@ class Embaralhamento(Cruzamento):
         desc1[:] = desc1[order]
         desc2[:] = desc2[order]
 
-        tmp = desc1.copy()
-
-        desc1[ponto:] = desc2[ponto:]
-        desc2[ponto:] = tmp[ponto:]
+        desc1[ponto:], desc2[ponto:] =  desc2[ponto:], desc1[ponto:]
 
         tmp1 = desc1.copy()
         tmp2 = desc2.copy()
 
         for i, j in enumerate(order):
-            desc1[i] = tmp1[j]
-            desc2[i] = tmp2[j]
+            desc1[j] = tmp1[i]
+            desc2[j] = tmp2[i]
 
         return desc1, desc2

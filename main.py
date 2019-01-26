@@ -9,13 +9,24 @@ Versão 0.0.1.
 """
 from numpy import exp, array, mgrid
 from pygenic.populacao import Populacao
+
 from pygenic.selecao.torneio import Torneio
+from pygenic.selecao.roleta import Roleta
+from pygenic.selecao.classificacao import Classificacao
+
 from pygenic.cruzamento.embaralhamento import Embaralhamento
-from pygenic.mutacao.mutacaoflip import Mutacaoflip
-from pygenic.mutacao.mutacaoduplatroca import Mutacaoduplatroca
+from pygenic.cruzamento.kpontos import KPontos
+from pygenic.cruzamento.umponto import UmPonto
+
+from pygenic.mutacao.flip import Flip
+from pygenic.mutacao.duplatroca import DuplaTroca
+from pygenic.mutacao.sequenciareversa import SequenciaReversa
+
+from pygenic.evolucao import Evolucao
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
+from matplotlib.animation import FuncAnimation
 
 
 def func(x, y):
@@ -48,36 +59,38 @@ def avaliacao(populacao):
     return tmp
 
 
-cromossos_totais = 8
-tamanho_populacao = 100
+cromossos_totais = 32
+tamanho_populacao = 50
 
 populacao = Populacao(avaliacao, cromossos_totais, tamanho_populacao)
-populacao.gerar_populacao()
+selecao = Classificacao(populacao)
+cruzamento = Embaralhamento(tamanho_populacao)
 
-classificacao = Torneio(populacao, tamanho=10)
-subpopulacao = classificacao.selecao(10)
+mutacao = Flip(pmut=0.9)
 
-embaralhamento = Embaralhamento(tamanho_populacao)
-pop = embaralhamento.descendentes(subpopulacao, pcruz=0.5)
+evolucao = Evolucao(populacao, selecao, cruzamento, mutacao)
+evolucao.nsele = 10
+evolucao.pcruz = 0.5
 
-p0 = pop.copy()
-
-mutacao = Mutacaoduplatroca(pop, pmut=0.1)
-mutacao.mutacao()
-
-p2 = p0 == pop
-
-print(p2.all())
-#mutacaoflip = Mutacaoflip(pop, pmut=0.1)
-#mutacaoflip.mutacao()
-
-x, y = xy(pop)
 
 fig = plt.figure(figsize=(100, 100))
 ax = fig.add_subplot(111, projection="3d")
 X, Y = mgrid[-3:3:30j, -3:3:30j]
 Z = func(X,Y)
 
+
+
 ax.plot_wireframe(X, Y, Z)
-ax.scatter(x, y, func(x, y), s=50, c='red', marker='D')
+x, y = xy(populacao.populacao)
+z = func(x, y)
+graph = ax.scatter(x, y, z, s=50, c='red', marker='D')
+
+def update(frame):
+    print(frame)
+    evolucao.evoluir()
+    x, y = xy(populacao.populacao)
+    z = func(x, y)
+    graph._offsets3d = (x, y, z)
+
+ani = FuncAnimation(fig, update, frames=range(10000), blit=False, repeat=False)
 plt.show()

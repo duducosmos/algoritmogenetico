@@ -14,7 +14,7 @@ from numpy import array
 from .cruzamento import Cruzamento, NoCompatibleIndividualSize
 
 
-class Umponto(Cruzamento):
+class UmPonto(Cruzamento):
     """
     Gerador de população via cruzamento usando o operador de um ponto.
 
@@ -22,7 +22,7 @@ class Umponto(Cruzamento):
         tamanho_populacao - Tamanho final da população resultante.
     """
     def __init__(self, tamanho_populacao):
-        super(Umponto, self).__init__(tamanho_populacao)
+        super(UmPonto, self).__init__(tamanho_populacao)
 
     def cruzamento(selfself, progenitor1, progenitor2):
         """

@@ -14,7 +14,7 @@ from numpy import array
 from .mutacao import Mutacao
 
 
-class Mutacaoflip(Mutacao):
+class Flip(Mutacao):
     """
     Mutaçao flip.
 
@@ -22,11 +22,12 @@ class Mutacaoflip(Mutacao):
         populacao - vetor de população que deverá sofrer mutação.
         pmut - probabilidade de ocorrer uma mutação.
     """
-    def __init__(self, populacao, pmut):
-        super(Mutacaoflip, self).__init__(populacao, pmut)
+    def __init__(self, pmut):
+        super(Flip, self).__init__(pmut)
 
     def mutacao(self):
         """Alteração genética de membros da população usando mutação flip."""
         nmut = self.selecao()
-        genflip = array([randint(0, self.ngen - 1) for _ in nmut])
-        self.populacao[nmut, genflip] = 1-self.populacao[nmut, genflip]
+        if nmut.size != 0:
+            genflip = array([randint(0, self.ngen - 1) for _ in nmut])
+            self.populacao[nmut, genflip] = 1-self.populacao[nmut, genflip]

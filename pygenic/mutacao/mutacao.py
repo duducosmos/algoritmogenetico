@@ -16,15 +16,22 @@ class Mutacao:
     """
     Classe base para operadores de mutação:
     Entrada:
-        populacao - vetor de população que deverá sofrer mutação.
         pmut - probabilidade de ocorrer uma mutação.
     """
 
-    def __init__(self, populacao, pmut):
-        self.populacao = populacao
+    def __init__(self, pmut):
         self.pmut = pmut
-        self.npop = self.populacao.shape[0]
-        self.ngen = self.populacao.shape[1]
+        self._populacao = None
+        self.npop = None
+        self.ngen = None
+
+    def _set_populacao(self, populacao):
+        self._populacao = populacao
+        self.npop = self._populacao.shape[0]
+        self.ngen = self._populacao.shape[1]
+
+    def _get_populacao(self):
+        return self._populacao
 
     def selecao(self):
         nmut = array([i for i in range(self.npop) if random() < self.pmut])
@@ -32,3 +39,5 @@ class Mutacao:
 
     def mutacao(self):
         raise NotImplementedError("A ser implementado")
+
+    populacao = property(_get_populacao, _set_populacao)
