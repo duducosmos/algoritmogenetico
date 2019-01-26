@@ -8,25 +8,16 @@ Desenvolvido por: E. S. Pereira.
 Versão 0.0.1.
 """
 from numpy import exp, array, mgrid
-from pygenic.populacao import Populacao
-
-from pygenic.selecao.torneio import Torneio
-from pygenic.selecao.roleta import Roleta
-from pygenic.selecao.classificacao import Classificacao
-
-from pygenic.cruzamento.embaralhamento import Embaralhamento
-from pygenic.cruzamento.kpontos import KPontos
-from pygenic.cruzamento.umponto import UmPonto
-
-from pygenic.mutacao.flip import Flip
-from pygenic.mutacao.duplatroca import DuplaTroca
-from pygenic.mutacao.sequenciareversa import SequenciaReversa
-
-from pygenic.evolucao import Evolucao
-
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 from matplotlib.animation import FuncAnimation
+
+from pygenic.populacao import Populacao
+from pygenic.selecao.roleta import Roleta
+from pygenic.cruzamento.kpontos import KPontos
+from pygenic.mutacao.flip import Flip
+from pygenic.evolucao import Evolucao
+
 
 
 def func(x, y):
@@ -55,7 +46,7 @@ def xy(populacao):
 
 def avaliacao(populacao):
     x, y = xy(populacao)
-    tmp = func(x, y)
+    tmp = -func(x, y)
     return tmp
 
 
@@ -63,12 +54,11 @@ cromossos_totais = 32
 tamanho_populacao = 50
 
 populacao = Populacao(avaliacao, cromossos_totais, tamanho_populacao)
-selecao = Classificacao(populacao)
-cruzamento = Embaralhamento(tamanho_populacao)
-
+selecao = Roleta(populacao)
+cruzamento = KPontos(tamanho_populacao)
 mutacao = Flip(pmut=0.9)
-
 evolucao = Evolucao(populacao, selecao, cruzamento, mutacao)
+
 evolucao.nsele = 10
 evolucao.pcruz = 0.5
 
@@ -77,20 +67,17 @@ fig = plt.figure(figsize=(100, 100))
 ax = fig.add_subplot(111, projection="3d")
 X, Y = mgrid[-3:3:30j, -3:3:30j]
 Z = func(X,Y)
-
-
-
 ax.plot_wireframe(X, Y, Z)
+
 x, y = xy(populacao.populacao)
 z = func(x, y)
 graph = ax.scatter(x, y, z, s=50, c='red', marker='D')
 
 def update(frame):
-    print(frame)
     evolucao.evoluir()
     x, y = xy(populacao.populacao)
     z = func(x, y)
     graph._offsets3d = (x, y, z)
 
-ani = FuncAnimation(fig, update, frames=range(10000), blit=False, repeat=False)
+ani = FuncAnimation(fig, update, frames=range(10000), repeat=False)
 plt.show()

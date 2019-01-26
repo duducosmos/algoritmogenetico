@@ -7,8 +7,7 @@ Programa sob licença GNU V.3.
 Desenvolvido por: E. S. Pereira.
 Versão 0.0.1.
 """
-from numpy.random import randint
-from numpy import argsort
+
 
 class Evolucao:
     """
@@ -26,28 +25,47 @@ class Evolucao:
         self.selecao = selecao
         self.cruzamento = cruzamento
         self.mutacao = mutacao
-        self.melhor_solucao = None
-        self.nsele = None
-        self.pcruz = None
+        self._melhor_solucao = None
+        self._geracao = 0
+        self._nsele = None
+        self._pcruz = None
+
+    def _set_nsele(self, nsele):
+        self._nsele = nsele
+
+    def _get_nsele(self):
+        return self._nsele
+
+    def _set_pcruz(self, pcruz):
+        self._pcruz = pcruz
+
+    def _get_pcruz(self):
+        return self._pcruz
+
+    @property
+    def melhor_solucao(self):
+        return self._melhor_solucao
+
+    @property
+    def geracao(self):
+        return self._geracao
 
     def evoluir(self):
         """
-        Evolução Elitista.
-
-        Entrada:
-            nsele - subpopulação a ser considerada na seleção.
-            prcruz - probabilidade de cruzamento.
-            geracoes - Total de geracoes.
+        Evolução elitista, por uma geração, da popução.
         """
-
         self.populacao.avaliar()
+        self._melhor_solucao = self.populacao.populacao[-1].copy()
 
-        self.melhor_solucao = self.populacao.populacao[-1].copy()
-
-        subpopulacao = self.selecao.selecao(self.nsele)
-        populacao = self.cruzamento.descendentes(subpopulacao, pcruz=self.pcruz)
+        subpopulacao = self.selecao.selecao(self._nsele)
+        populacao = self.cruzamento.descendentes(subpopulacao, pcruz=self._pcruz)
 
         self.mutacao.populacao = populacao
         self.mutacao.mutacao()
         self.populacao.populacao[:] = populacao[:]
-        self.populacao.populacao[0] = self.melhor_solucao
+        self.populacao.populacao[0] = self._melhor_solucao
+
+        self._geracao += 1
+
+    nsele = property(_get_nsele, _set_nsele)
+    pcruz = property(_get_pcruz, _set_pcruz)
