@@ -46,12 +46,12 @@ def xy(populacao):
 
 def avaliacao(populacao):
     x, y = xy(populacao)
-    tmp = -func(x, y)
+    tmp = func(x, y)
     return tmp
 
 
-cromossos_totais = 32
-tamanho_populacao = 50
+cromossos_totais = 16
+tamanho_populacao = 100
 
 populacao = Populacao(avaliacao, cromossos_totais, tamanho_populacao)
 selecao = Roleta(populacao)

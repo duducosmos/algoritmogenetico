@@ -64,8 +64,10 @@ class Evolucao:
         self.mutacao.mutacao()
         self.populacao.populacao[:] = populacao[:]
         self.populacao.populacao[0] = self._melhor_solucao
+        valores = self.populacao.avaliar()
 
         self._geracao += 1
+        return valores[-1], self.populacao.populacao[-1].copy()
 
     nsele = property(_get_nsele, _set_nsele)
     pcruz = property(_get_pcruz, _set_pcruz)
