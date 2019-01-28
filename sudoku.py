@@ -1,20 +1,48 @@
 from numpy import zeros, array, split, hsplit, where, count_nonzero, concatenate
-from numpy.random import randint, choice
+from numpy.random import randint, choice, shuffle
 import random
 
-BONUS = 1000
+BONUS = 1
+PERDA = -1
 
 class Sudoku:
     def __init__(self):
-        self._sudoku = zeros((9,9), dtype=int)
-        self._window = array([[0, 1, 2], []])
+
+        self._sudoku = array([[0, 0, 9, 5, 3, 0, 8, 0, 0],
+                              [0, 3, 1, 7, 4, 0, 0, 9, 0],
+                              [8, 7, 0, 0, 6, 0, 3, 2, 0],
+
+                              [7, 9, 0, 4, 0, 0, 1, 8, 5],
+                              [4, 1, 0, 0, 5, 6, 7, 3, 0],
+                              [0, 0, 0, 9, 1, 0, 0, 6, 2],
+
+                              [0, 2, 3, 6, 0, 0, 0, 1, 8],
+                              [1, 0, 0, 0, 9, 0, 6, 4, 3],
+                              [0, 6, 4, 3, 8, 1, 0, 0, 0]
+                              ])
+        '''
+        self._sudoku = array([[0, 0, 0, 0, 0, 0, 0, 0, 0],
+                              [0, 0, 0, 0, 0, 3, 0, 8, 5],
+                              [0, 0, 1, 0, 2, 0, 0, 0, 0],
+
+                              [0, 0, 0, 5, 0, 7, 0, 0, 0],
+                              [0, 0, 4, 0, 0, 0, 1, 0, 0],
+                              [0, 9, 0, 0, 0, 0, 0, 0, 0],
+
+                              [5, 0, 0, 0, 0, 0, 0, 7, 3],
+                              [0, 0, 2, 0, 1, 0, 0, 0, 0],
+                              [0, 0, 0, 0, 4, 0, 0, 0, 9]
+                              ])
+        '''
+        self.solucao = None
+
 
     @property
     def sudoku(self):
         return self._sudoku
 
-    def quadrante(self, numero, linha, coluna):
-        tmp = split(self._sudoku, 3)
+    def quadrante(self, numero, linha, coluna, valorlc):
+        tmp = split(self.solucao, 3)
         quad = []
 
         for sub in tmp:
@@ -28,7 +56,15 @@ class Sudoku:
         subquad = quad[int(linha / 3), int(coluna / 3)]
         c = count_nonzero(subquad == numero)
         if c != 0:
-            return -1000 * c
+            return PERDA * c
+
+        nzeros = count_nonzero(subquad == 0)
+        if nzeros == 1:
+            if valorlc < 0:
+                return PERDA * 100
+            else:
+                return BONUS * 50
+
         return BONUS
 
 
@@ -36,24 +72,14 @@ class Sudoku:
         if numero < 1 or numero > 9:
             return -1000000000
 
-        tmp = -1000 * count_nonzero(self._sudoku[linha,:] == numero)
-        tmp += -1000 * count_nonzero(self._sudoku[:,coluna] == numero)
-        tmp += self.quadrante(numero, linha, coluna)
-        return tmp
+        valorlc = PERDA * count_nonzero(self.solucao[linha,:] == numero)
+        valorlc += PERDA * count_nonzero(self.solucao[:,coluna] == numero)
+        valorlc += self.quadrante(numero, linha, coluna, valorlc)
+        if valorlc > 0:
+            self.solucao[linha, coluna] = numero
 
+        return valorlc
 
-    def gerador(self):
-        for numero in range(1,10):
-            repeticoes = 5
-            linha = randint(0, 8)
-            coluna = randint(0, 8)
-            cont = 0
-            while  cont < repeticoes:
-                if self.verificar(numero, linha, coluna) == BONUS:
-                    cont += 1
-                    self._sudoku[linha, coluna] = numero
-                linha = randint(0, 8)
-                coluna = randint(0, 8)
 
 def bin(x):
     cnt = array([2 ** i for i in range(x.shape[1])])
@@ -70,78 +96,101 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 if __name__ == "__main__":
+
+    import os
     from pygenic.populacao import Populacao
     from pygenic.selecao.torneio import Torneio
     from pygenic.selecao.roleta import Roleta
 
     from pygenic.cruzamento.kpontos import KPontos
     from pygenic.cruzamento.embaralhamento import Embaralhamento
+    from pygenic.cruzamento.umponto import UmPonto
 
     from pygenic.mutacao.sequenciareversa import SequenciaReversa
     from pygenic.mutacao.flip import Flip
+    from pygenic.mutacao.duplatroca import DuplaTroca
 
     from pygenic.evolucao import Evolucao
 
     sudoku = Sudoku()
-    sudoku.gerador()
     print(sudoku.sudoku)
     input("Enter")
 
     nozeros = count_nonzero(sudoku.sudoku == 0)
 
+    bits = 32
+
     def valores(populacao):
         bx = hsplit(populacao, nozeros)
-        #const = 15
-        #const = (9 - 1) / const
-        x = [1 + bin(xi) for xi in bx]
+
+        const = 2 ** bits - 1
+        const = (9 - 1) / const
+        x = [1 + const * bin(xi) for xi in bx]
         x = concatenate(x).T.astype(int)
         return x
 
     def avaliacao(populacao):
         linhas, colunas = where(sudoku.sudoku == 0)
-
         x = valores(populacao)
 
         peso = []
         for k in range(len(populacao)):
+            sudoku.solucao = sudoku.sudoku.copy()
+            y = x[k,:].copy()
+            data = list(zip(y, linhas, colunas))
+
             tmp = sum([sudoku.verificar(num, i, j)
-                   for num, i, j in zip(x[k,:], linhas, colunas)
+                   for num, i, j in data
                    ])
+
+            convergencia = 10 * count_nonzero(sudoku.solucao == 0)
+            tmp -= convergencia
             peso.append(tmp)
         peso = array(peso)
         return peso
 
 
-    cromossos_totais = 4 * nozeros
+    cromossos_totais = bits * nozeros
     tamanho_populacao = 50
 
     populacao = Populacao(avaliacao, cromossos_totais, tamanho_populacao)
-    selecao = Torneio(populacao)
-    cruzamento = Embaralhamento(tamanho_populacao)
-    mutacao = SequenciaReversa(pmut=0.2)
+    selecao = Torneio(populacao, tamanho=5)
+    cruzamento = KPontos(tamanho_populacao)
+    mutacao = DuplaTroca(pmut=0.1)
     evolucao = Evolucao(populacao, selecao, cruzamento, mutacao)
 
     evolucao.nsele = int(0.1 * tamanho_populacao)
     evolucao.pcruz = 0.6
 
+    convergencia = nozeros
 
-    for i in range(10000):
+
+    while convergencia > 0:
         valor, solucao = evolucao.evoluir()
+        os.system("clear")
         print(evolucao.geracao)
-        print(valor, nozeros, nozeros - int((nozeros*BONUS - valor)/ BONUS))
-        if evolucao.geracao % 10 == 0:
-            tmp = sudoku.sudoku.copy()
-            p = populacao.populacao[-1] == solucao
-            v = valores(populacao.populacao)[-1]
-            linha, coluna = where(tmp==0)
-            tmp = tmp.astype(str)
-            for n, k, j in zip(v, linha, coluna):
-                tmp[k,j] = "{0}{1}{2}".format(bcolors.WARNING , n, bcolors.ENDC)
+        print(valor, nozeros)
+        sudoku.solucao = sudoku.sudoku.copy()
+        p = populacao.populacao[-1] == solucao
+        v = valores(populacao.populacao)[-1]
+        linha, coluna = where(sudoku.solucao==0)
+        data = list(zip(v, linha, coluna))
+        #shuffle(data)
+        for n, k, j in data:
+            sudoku.verificar(n, k, j)
 
-            tmp2 = ""
+        tmp = sudoku.solucao.astype(str)
+        convergencia = count_nonzero(sudoku.solucao == 0)
+        print(nozeros - convergencia)
+        for k, j in zip(linha, coluna):
+            if tmp[k,j] != "0":
+                tmp[k,j] = "{0}{1}{2}".format(bcolors.WARNING , tmp[k,j], bcolors.ENDC)
 
-            for l in range(tmp.shape[0]):
-                tmp2 += "|" + ", ".join(tmp[l]) + "|\n"
+        tmp2 = ""
 
-            print(tmp2)
-            print("\n")
+        for l in range(tmp.shape[0]):
+            tmp2 += "|" + ", ".join(tmp[l]) + "|\n"
+
+        print(tmp2)
+        print("\n")
+    print("".join(solucao.astype(str)))
