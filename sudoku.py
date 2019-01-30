@@ -3,37 +3,40 @@ from numpy.random import randint, choice, shuffle
 import random
 
 BONUS = 1
-PERDA = -1
+PERDA = -5
 
 class Sudoku:
     def __init__(self):
 
-        self._sudoku = array([[0, 0, 9, 5, 3, 0, 8, 0, 0],
-                              [0, 3, 1, 7, 4, 0, 0, 9, 0],
-                              [8, 7, 0, 0, 6, 0, 3, 2, 0],
 
-                              [7, 9, 0, 4, 0, 0, 1, 8, 5],
-                              [4, 1, 0, 0, 5, 6, 7, 3, 0],
-                              [0, 0, 0, 9, 1, 0, 0, 6, 2],
+        self._sudoku = array([[0, 0, 0, 6, 0, 3, 1, 7, 0],
+                              [0, 7, 0, 4, 1, 0, 0, 3, 8],
+                              [4, 0, 1, 7, 5, 0, 0, 6, 2],
 
-                              [0, 2, 3, 6, 0, 0, 0, 1, 8],
-                              [1, 0, 0, 0, 9, 0, 6, 4, 3],
-                              [0, 6, 4, 3, 8, 1, 0, 0, 0]
+                              [0, 8, 0, 3, 0, 0, 2, 1, 0],
+                              [0, 9, 6, 2, 4, 1, 0, 8, 5],
+                              [1, 0, 7, 0, 0, 0, 3, 4, 6],
+
+                              [9, 4, 2, 1, 3, 0, 0, 5, 0],
+                              [0, 1, 0, 0, 7, 0, 6, 0, 0],
+                              [7, 6, 3, 0, 0, 5, 4, 0, 0]
                               ])
         '''
-        self._sudoku = array([[0, 0, 0, 0, 0, 0, 0, 0, 0],
-                              [0, 0, 0, 0, 0, 3, 0, 8, 5],
-                              [0, 0, 1, 0, 2, 0, 0, 0, 0],
+        self._sudoku = array([[0, 0, 0, 4, 0, 9, 0, 0, 0],
+                              [0, 0, 4, 7, 3, 0, 0, 0, 0],
+                              [0, 5, 0, 0, 0, 0, 9, 0, 0],
 
-                              [0, 0, 0, 5, 0, 7, 0, 0, 0],
-                              [0, 0, 4, 0, 0, 0, 1, 0, 0],
-                              [0, 9, 0, 0, 0, 0, 0, 0, 0],
+                              [1, 0, 0, 9, 0, 8, 0, 4, 0],
+                              [7, 0, 9, 0, 2, 0, 5, 0, 6],
+                              [0, 8, 0, 5, 0, 4, 0, 0, 3],
 
-                              [5, 0, 0, 0, 0, 0, 0, 7, 3],
-                              [0, 0, 2, 0, 1, 0, 0, 0, 0],
-                              [0, 0, 0, 0, 4, 0, 0, 0, 9]
+                              [0, 0, 8, 0, 0, 0, 0, 7, 0],
+                              [0, 0, 0, 0, 5, 7, 6, 0, 0],
+                              [0, 0, 0, 1, 0, 2, 0, 0, 0]
                               ])
         '''
+
+
         self.solucao = None
 
 
@@ -54,18 +57,33 @@ class Sudoku:
 
         quad = array(quad)
         subquad = quad[int(linha / 3), int(coluna / 3)]
-        c = count_nonzero(subquad == numero)
-        if c != 0:
-            return PERDA * c
 
+        repeticoes = count_nonzero(subquad == numero)
         nzeros = count_nonzero(subquad == 0)
-        if nzeros == 1:
-            if valorlc < 0:
-                return PERDA * 100
-            else:
-                return BONUS * 50
 
-        return BONUS
+        if repeticoes != 0:
+            return PERDA * repeticoes * 100
+
+        if valorlc < 0:
+            sudo_linha = count_nonzero(self.sudoku[linha,:] == numero)
+            sudo_coluna = count_nonzero(self.sudoku[:,coluna] == numero)
+            p = 0
+
+            if sudo_linha != 0:
+                p += 1
+
+            if sudo_coluna != 0:
+                p += 1
+
+            if p == 0:
+                return PERDA * 10
+
+            return PERDA * p
+
+        if nzeros == 1:
+            return BONUS * 100
+
+        return BONUS * 3
 
 
     def verificar(self, numero, linha, coluna):
@@ -118,13 +136,13 @@ if __name__ == "__main__":
 
     nozeros = count_nonzero(sudoku.sudoku == 0)
 
-    bits = 32
+    bits = 6
 
     def valores(populacao):
         bx = hsplit(populacao, nozeros)
 
         const = 2 ** bits - 1
-        const = (9 - 1) / const
+        const = (10 - 1) / const
         x = [1 + const * bin(xi) for xi in bx]
         x = concatenate(x).T.astype(int)
         return x
@@ -143,45 +161,47 @@ if __name__ == "__main__":
                    for num, i, j in data
                    ])
 
-            convergencia = 10 * count_nonzero(sudoku.solucao == 0)
-            tmp -= convergencia
+
+            restante =  count_nonzero(sudoku.sudoku == 0)
+            restante -= count_nonzero(sudoku.solucao == 0)
+            tmp -= restante
             peso.append(tmp)
         peso = array(peso)
         return peso
 
 
     cromossos_totais = bits * nozeros
-    tamanho_populacao = 50
+    tamanho_populacao = 30
 
     populacao = Populacao(avaliacao, cromossos_totais, tamanho_populacao)
-    selecao = Torneio(populacao, tamanho=5)
+    selecao = Torneio(populacao, tamanho=int(0.1 * tamanho_populacao))
     cruzamento = KPontos(tamanho_populacao)
     mutacao = DuplaTroca(pmut=0.1)
     evolucao = Evolucao(populacao, selecao, cruzamento, mutacao)
 
     evolucao.nsele = int(0.1 * tamanho_populacao)
     evolucao.pcruz = 0.6
+    evolucao.epidemia = 100
+    evolucao.manter_melhor = True
 
     convergencia = nozeros
 
 
     while convergencia > 0:
-        valor, solucao = evolucao.evoluir()
-        os.system("clear")
+        valor, vmin = evolucao.evoluir()
         print(evolucao.geracao)
-        print(valor, nozeros)
+
         sudoku.solucao = sudoku.sudoku.copy()
         p = populacao.populacao[-1] == solucao
         v = valores(populacao.populacao)[-1]
         linha, coluna = where(sudoku.solucao==0)
         data = list(zip(v, linha, coluna))
-        #shuffle(data)
         for n, k, j in data:
             sudoku.verificar(n, k, j)
 
         tmp = sudoku.solucao.astype(str)
         convergencia = count_nonzero(sudoku.solucao == 0)
-        print(nozeros - convergencia)
+        print(nozeros - convergencia, nozeros, valor, vmin)
         for k, j in zip(linha, coluna):
             if tmp[k,j] != "0":
                 tmp[k,j] = "{0}{1}{2}".format(bcolors.WARNING , tmp[k,j], bcolors.ENDC)

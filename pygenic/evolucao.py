@@ -8,6 +8,8 @@ Desenvolvido por: E. S. Pereira.
 Versão 0.0.1.
 """
 
+from numpy.random import random
+
 
 class Evolucao:
     """
@@ -29,6 +31,20 @@ class Evolucao:
         self._geracao = 0
         self._nsele = None
         self._pcruz = None
+        self._epidemia = None
+        self._manter_melhor = True
+
+    def _set_epidemia(self, epidemia):
+        self._epidemia = epidemia
+
+    def _set_manter_melhor(self, manter):
+        self._manter_melhor = manter
+
+    def _get_manter_melhor(self):
+        return self._manter_melhor
+
+    def _get_epidemia(self):
+        return self._epidemia
 
     def _set_nsele(self, nsele):
         self._nsele = nsele
@@ -54,8 +70,10 @@ class Evolucao:
         """
         Evolução elitista, por uma geração, da popução.
         """
-        self.populacao.avaliar()
+        valores = self.populacao.avaliar()
         self._melhor_solucao = self.populacao.populacao[-1].copy()
+
+
 
         subpopulacao = self.selecao.selecao(self._nsele)
         populacao = self.cruzamento.descendentes(subpopulacao, pcruz=self._pcruz)
@@ -63,17 +81,24 @@ class Evolucao:
         self.mutacao.populacao = populacao
         self.mutacao.mutacao()
         self.populacao.populacao[:] = populacao[:]
-        self.populacao.populacao[0] = self._melhor_solucao
-
+        if self._manter_melhor is True:
+            self.populacao.populacao[0] = self._melhor_solucao
 
         self._geracao += 1
-        if self._geracao % 50 == 0:
-            print("Epidemico")
-            self.populacao.gerar_populacao()
-            self.populacao.populacao[0] = self._melhor_solucao
+
+        if self._epidemia is not None:
+            if self._geracao % self._epidemia == 0 and random() < 0.8:
+                """Passo Epidêmico"""
+                print("Epidemia")
+                self._possivel_local = 0
+                self.populacao.gerar_populacao()
+                self.populacao.populacao[0] = self._melhor_solucao
+
         valores = self.populacao.avaliar()
 
-        return valores[-1], self.populacao.populacao[-1].copy()
+        return valores.max(), valores.min()
 
     nsele = property(_get_nsele, _set_nsele)
     pcruz = property(_get_pcruz, _set_pcruz)
+    epidemia = property(_get_epidemia, _set_epidemia)
+    manter_melhor = property(_get_manter_melhor, _set_manter_melhor)
