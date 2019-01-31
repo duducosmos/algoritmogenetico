@@ -1,13 +1,13 @@
 from numpy import zeros, array, split, hsplit, where, count_nonzero, concatenate
+from numpy import isin
 from numpy.random import randint, choice, shuffle
 import random
 
 BONUS = 1
-PERDA = -5
+PERDA = -1
 
 class Sudoku:
     def __init__(self):
-
 
         self._sudoku = array([[0, 0, 0, 6, 0, 3, 1, 7, 0],
                               [0, 7, 0, 4, 1, 0, 0, 3, 8],
@@ -38,13 +38,43 @@ class Sudoku:
 
 
         self.solucao = None
+        self._possiveis = array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+        self._quadrante_linha = {0:0, 1:3, 2:6}
+        self._quadrante_coluna = {0:0, 1:3, 2:6}
 
 
     @property
     def sudoku(self):
         return self._sudoku
 
-    def quadrante(self, numero, linha, coluna, valorlc):
+    def teste_ilegalidade(self, x, y):
+        quadrante = self.obter_quadrante(x, y)
+        l0 = self._quadrante_linha[x]
+        c0 = self._quadrante_coluna[y]
+
+        linhas, colunas = where(quadrante == 0)
+        if linhas.size != 0:
+            linhas = linhas + l0
+            colunas = colunas + c0
+            testar = self._possiveis[~isin(self._possiveis, quadrante)]
+            ij = list(zip(linhas, colunas))
+
+            invalidas = 0
+            for numero in testar:
+                tmp = 0
+                for i,j in ij:
+                    a = count_nonzero(self.solucao[i, :] == numero)
+                    b = count_nonzero(self.solucao[:, j] == numero)
+                    if a != 0 or b != 0:
+                        tmp += 1
+
+                if tmp == len(ij):
+                    invalidas += 1
+
+            return invalidas
+        return 0
+
+    def obter_quadrante(self, x, y):
         tmp = split(self.solucao, 3)
         quad = []
 
@@ -54,15 +84,22 @@ class Sudoku:
             for sub3 in sub2:
                 tmp2.append(sub3.tolist())
             quad.append(tmp2)
-
         quad = array(quad)
-        subquad = quad[int(linha / 3), int(coluna / 3)]
+        subquad = quad[x, y]
+        return subquad
+
+
+
+    def quadrante(self, numero, linha, coluna, valorlc):
+
+        x, y = (int(linha / 3), int(coluna / 3))
+        subquad = self.obter_quadrante(x, y)
 
         repeticoes = count_nonzero(subquad == numero)
         nzeros = count_nonzero(subquad == 0)
 
         if repeticoes != 0:
-            return PERDA * repeticoes * 100
+            return PERDA
 
         if valorlc < 0:
             sudo_linha = count_nonzero(self.sudoku[linha,:] == numero)
@@ -76,14 +113,11 @@ class Sudoku:
                 p += 1
 
             if p == 0:
-                return PERDA * 10
+                return PERDA * 100
 
             return PERDA * p
 
-        if nzeros == 1:
-            return BONUS * 100
-
-        return BONUS * 3
+        return BONUS
 
 
     def verificar(self, numero, linha, coluna):
@@ -93,8 +127,10 @@ class Sudoku:
         valorlc = PERDA * count_nonzero(self.solucao[linha,:] == numero)
         valorlc += PERDA * count_nonzero(self.solucao[:,coluna] == numero)
         valorlc += self.quadrante(numero, linha, coluna, valorlc)
+
         if valorlc > 0:
             self.solucao[linha, coluna] = numero
+            return BONUS
 
         return valorlc
 
@@ -119,6 +155,8 @@ if __name__ == "__main__":
     from pygenic.populacao import Populacao
     from pygenic.selecao.torneio import Torneio
     from pygenic.selecao.roleta import Roleta
+    from pygenic.selecao.classificacao import Classificacao
+
 
     from pygenic.cruzamento.kpontos import KPontos
     from pygenic.cruzamento.embaralhamento import Embaralhamento
@@ -136,7 +174,7 @@ if __name__ == "__main__":
 
     nozeros = count_nonzero(sudoku.sudoku == 0)
 
-    bits = 6
+    bits = 4
 
     def valores(populacao):
         bx = hsplit(populacao, nozeros)
@@ -161,11 +199,18 @@ if __name__ == "__main__":
                    for num, i, j in data
                    ])
 
+            qij = [[0,0], [0,1], [0, 2],
+                   [1,0], [1,1], [1, 2],
+                   [2,0], [2,1], [2, 2]
+                  ]
 
+            ilegais = sum([sudoku.teste_ilegalidade(xy[0], xy[1]) for xy in qij])
             restante =  count_nonzero(sudoku.sudoku == 0)
             restante -= count_nonzero(sudoku.solucao == 0)
-            tmp -= restante
+            #tmp += PERDA * restante
+            tmp += PERDA * ilegais * 100000
             peso.append(tmp)
+
         peso = array(peso)
         return peso
 
@@ -174,14 +219,17 @@ if __name__ == "__main__":
     tamanho_populacao = 30
 
     populacao = Populacao(avaliacao, cromossos_totais, tamanho_populacao)
-    selecao = Torneio(populacao, tamanho=int(0.1 * tamanho_populacao))
-    cruzamento = KPontos(tamanho_populacao)
-    mutacao = DuplaTroca(pmut=0.1)
+
+    selecao = Torneio(populacao, tamanho=int(0.2 * tamanho_populacao))
+    #selecao = Classificacao(populacao)
+
+    cruzamento = Embaralhamento(tamanho_populacao)
+    mutacao = SequenciaReversa(pmut=0.1)
     evolucao = Evolucao(populacao, selecao, cruzamento, mutacao)
 
-    evolucao.nsele = int(0.1 * tamanho_populacao)
+    evolucao.nsele = int(0.2 * tamanho_populacao)
     evolucao.pcruz = 0.6
-    evolucao.epidemia = 100
+    evolucao.epidemia = 50
     evolucao.manter_melhor = True
 
     convergencia = nozeros
@@ -192,7 +240,6 @@ if __name__ == "__main__":
         print(evolucao.geracao)
 
         sudoku.solucao = sudoku.sudoku.copy()
-        p = populacao.populacao[-1] == solucao
         v = valores(populacao.populacao)[-1]
         linha, coluna = where(sudoku.solucao==0)
         data = list(zip(v, linha, coluna))
