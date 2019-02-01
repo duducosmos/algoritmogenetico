@@ -77,7 +77,7 @@ class Evolucao:
 
         subpopulacao = self.selecao.selecao(self._nsele)
         populacao = self.cruzamento.descendentes(subpopulacao, pcruz=self._pcruz)
-
+        
         self.mutacao.populacao = populacao
         self.mutacao.mutacao()
         self.populacao.populacao[:] = populacao[:]
