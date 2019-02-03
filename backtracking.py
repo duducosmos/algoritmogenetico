@@ -79,7 +79,7 @@ while l < len(licol):
         encaixou = sudoku.verificar(numero, i, j)
         if encaixou > 0:
             break
-            
+
     if encaixou > 0:
         l = l + 1
     else:

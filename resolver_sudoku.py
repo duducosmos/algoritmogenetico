@@ -3,7 +3,7 @@
 """
 Usa algoritmo genético para resolver o sudoku.
 """
-from numpy import array, count_nonzero, where, hsplit, concatenate
+from numpy import array, count_nonzero, where, hsplit, concatenate, exp
 from sudoku import Sudoku
 
 from pygenic.populacao import Populacao
@@ -19,6 +19,7 @@ from pygenic.cruzamento.umponto import UmPonto
 from pygenic.mutacao.sequenciareversa import SequenciaReversa
 from pygenic.mutacao.flip import Flip
 from pygenic.mutacao.duplatroca import DuplaTroca
+from pygenic.mutacao.ntrocas import NTrocas
 
 from pygenic.evolucao import Evolucao
 import time
@@ -56,10 +57,8 @@ sudoku.sudoku = array([[0, 0, 0, 6, 0, 3, 1, 7, 0],
                        [7, 6, 3, 0, 0, 5, 4, 0, 0]
                       ])
 
-
 '''
-
-
+'''
 # Muito Fácil
 sudoku.sudoku = array([[0, 0, 7, 0, 0, 1, 8, 0, 0],
                        [0, 3, 0, 2, 6, 7, 9, 0, 5],
@@ -75,7 +74,7 @@ sudoku.sudoku = array([[0, 0, 7, 0, 0, 1, 8, 0, 0],
                       ])
 
 
-
+'''
 '''
 #Fácil
 sudoku.sudoku = array([[0, 0, 0, 0, 9, 0, 2, 0, 0],
@@ -91,6 +90,22 @@ sudoku.sudoku = array([[0, 0, 0, 0, 9, 0, 2, 0, 0],
                        [0, 0, 5, 0, 8, 0, 0, 0, 0]
                       ])
 
+'''
+
+'''
+#Facil
+sudoku.sudoku = array([[9, 0, 0, 1, 0, 0, 5, 0, 0],
+                       [0, 3, 2, 5, 0, 0, 0, 0, 0],
+                       [0, 0, 5, 0, 0, 0, 0, 3, 1],
+
+                       [0, 1, 0, 0, 0, 0, 8, 4, 0],
+                       [6, 0, 8, 3, 0, 7, 9, 0, 2],
+                       [0, 4, 7, 0, 0, 0, 0, 5, 0],
+
+                       [8, 6, 0, 0, 0, 0, 3, 0, 0],
+                       [0, 0, 0, 0, 0, 6, 1, 2, 0],
+                       [0, 0, 1, 0, 0, 5, 0, 0, 6]
+                      ])
 '''
 '''
 sudoku.sudoku = array([[0, 4, 0, 2, 0, 1, 0, 3, 0],
@@ -108,6 +123,21 @@ sudoku.sudoku = array([[0, 4, 0, 2, 0, 1, 0, 3, 0],
 '''
 
 '''
+#Dificil
+sudoku.sudoku = array([[0, 0, 0, 3, 0, 0, 0, 0, 4],
+                       [0, 0, 9, 0, 0, 0, 6, 5, 3],
+                       [0, 2, 0, 0, 5, 4, 0, 1, 0],
+
+                       [0, 9, 0, 5, 2, 0, 0, 0, 7],
+                       [0, 0, 0, 1, 0, 7, 0, 0, 0],
+                       [1, 0, 0, 0, 8, 6, 0, 3, 0],
+
+                       [0, 8, 0, 6, 3, 0, 0, 4, 0],
+                       [2, 5, 6, 0, 0, 0, 3, 0, 0],
+                       [9, 0, 0, 0, 0, 1, 0, 0, 0]
+                      ])
+'''
+
 #Muito Dificil para maquina
 sudoku.sudoku = array([[0, 0, 0, 0, 0, 0, 0, 0, 0],
                        [0, 0, 0, 0, 0, 3, 0, 8, 5],
@@ -121,11 +151,11 @@ sudoku.sudoku = array([[0, 0, 0, 0, 0, 0, 0, 0, 0],
                        [0, 0, 2, 0, 1, 0, 0, 0, 0],
                        [0, 0, 0, 0, 4, 0, 0, 0, 9]
                       ])
-'''
+
 
 nozeros = count_nonzero(sudoku.sudoku == 0)
 
-bits = 6
+bits = 4
 
 def valores(populacao):
     bx = hsplit(populacao, nozeros)
@@ -146,17 +176,15 @@ def avaliacao(populacao):
         y = x[k,:].copy()
         data = list(zip(y, linhas, colunas))
 
-        tmp = sum([sudoku.verificar(num, i, j)
+        tmp = 10 * sum([sudoku.verificar(num, i, j)
                for num, i, j in data
                ])
 
-        ilegais = sudoku.total_ilegais()
-        tmp += sudoku.perda * ilegais * 100000
-        if ilegais == 0:
-            profundidade, ilegais, resposta = sudoku.tentar_preencher()
-            if profundidade is not None:
-                tmp += sudoku.perda * profundidade * 10
-                tmp += sudoku.perda * ilegais * 1000
+        profundidade, ilegais, resposta = sudoku.tentar_preencher()
+        if profundidade is not None:
+            objetivo = (profundidade + ilegais) / (1e-3 * profundidade + 1.0)
+            objetivo += (profundidade + ilegais ** 3) / (ilegais + 1.0)
+            tmp += sudoku.perda * int(1000 * objetivo)
 
         peso.append(tmp)
 
@@ -168,14 +196,15 @@ cromossos_totais = bits * nozeros
 tamanho_populacao = 30
 
 populacao = Populacao(avaliacao, cromossos_totais, tamanho_populacao)
-selecao = Torneio(populacao, tamanho=int(0.3 * tamanho_populacao))
+selecao = Torneio(populacao, tamanho=int(0.1 * tamanho_populacao))
 cruzamento = Embaralhamento(tamanho_populacao)
-mutacao = SequenciaReversa(pmut=0.1)
+mutacao = NTrocas(pmut=0.5, bits_por_intervalo=bits)
+#mutacao = SequenciaReversa(pmut=0.5)
 evolucao = Evolucao(populacao, selecao, cruzamento, mutacao)
 
 evolucao.nsele = int(0.1 * tamanho_populacao)
-evolucao.pcruz = 0.4
-evolucao.epidemia = 50
+evolucao.pcruz = 0.1
+evolucao.epidemia = 1000
 evolucao.manter_melhor = True
 
 convergencia = nozeros
@@ -183,6 +212,7 @@ convergencia = nozeros
 sem_mudancas = 0
 ultima_mudanca = -10
 t0 = time.time()
+solucoes_ruins = []
 while convergencia > 0:
     valor, vmin = evolucao.evoluir()
     print(evolucao.geracao)
@@ -200,18 +230,19 @@ while convergencia > 0:
     if convergencia < 15:
         print(sudoku.total_ilegais())
 
-    if convergencia < 10:
-        sudoku.finalizar_quadrante()
-        convergencia = count_nonzero(sudoku.solucao == 0)
-        if convergencia != 0:
-            print("Minimo Local, Reiniciar")
+    if len(solucoes_ruins) != 0:
+        if populacao.populacao[-1].tolist() in solucoes_ruins:
+            print("Repetindo Minimo Local: Reiniciar")
             populacao.gerar_populacao()
 
 
+
     if ultima_mudanca == convergencia:
+
         sem_mudancas += 1
-        if sem_mudancas == 10000:
+        if sem_mudancas == 2000:
             print("Minimo Local, Reiniciar")
+            solucoes_ruins.append(populacao.populacao[-1].tolist())
             populacao.gerar_populacao()
             sem_mudancas = 0
     else:
@@ -244,3 +275,4 @@ while convergencia > 0:
         break
 
 print("Tempo: ", (time.time() - t0) / 60)
+print("\n")

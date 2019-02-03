@@ -141,7 +141,6 @@ class Sudoku:
                     encaixou = self.verificar(numero, i, j)
                     if encaixou > 0:
                         break
-
                 if encaixou > 0:
                     l = l + 1
                 else:
@@ -153,7 +152,7 @@ class Sudoku:
             tilegais =  self.total_ilegais()
             self.solucao, original = original, self.solucao
             return n - l, tilegais, original
-        return None, None
+        return None, None, None
 
 
 
