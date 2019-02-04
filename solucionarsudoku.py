@@ -39,7 +39,7 @@ class SolucionarSudoku:
         self.mutacao = None
         self.evolucao = None
 
-    def inicialiar(self, pmut=0.5, pcruz=0.1, epidemia=50, elitista=True):
+    def inicializar(self, pmut=0.5, pcruz=0.1, epidemia=50, elitista=True):
         """Inicializa o algoritmo genético para."""
         tamanho = int(0.1 * self.tamanho_populacao)
         genes = self.bits * self.cromossomos
