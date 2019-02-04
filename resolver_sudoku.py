@@ -180,6 +180,8 @@ def avaliacao(populacao):
                for num, i, j in data
                ])
 
+        tmp += 100000 * sudoku.perda * sudoku.total_ilegais()
+
         profundidade, ilegais, resposta = sudoku.tentar_preencher()
         if profundidade is not None:
             objetivo = (profundidade + ilegais) / (1e-3 * profundidade + 1.0)
@@ -198,13 +200,13 @@ tamanho_populacao = 30
 populacao = Populacao(avaliacao, cromossos_totais, tamanho_populacao)
 selecao = Torneio(populacao, tamanho=int(0.1 * tamanho_populacao))
 cruzamento = Embaralhamento(tamanho_populacao)
-mutacao = NTrocas(pmut=0.5, bits_por_intervalo=bits)
-#mutacao = SequenciaReversa(pmut=0.5)
+#mutacao = NTrocas(pmut=0.5, bits_por_intervalo=bits)
+mutacao = SequenciaReversa(pmut=0.5)
 evolucao = Evolucao(populacao, selecao, cruzamento, mutacao)
 
 evolucao.nsele = int(0.1 * tamanho_populacao)
 evolucao.pcruz = 0.1
-evolucao.epidemia = 1000
+evolucao.epidemia = 50
 evolucao.manter_melhor = True
 
 convergencia = nozeros

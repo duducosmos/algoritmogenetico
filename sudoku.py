@@ -32,6 +32,10 @@ class Sudoku:
 
     def _set_sudoku(self, sudoku):
         self._sudoku = sudoku
+        self.solucao = sudoku.copy()
+
+    def numero_de_casas_vazias(self):
+        return count_nonzero(self.solucao == 0)
 
     def quadrante(self, x, y):
         tmp = split(self.solucao, 3)
@@ -153,8 +157,5 @@ class Sudoku:
             self.solucao, original = original, self.solucao
             return n - l, tilegais, original
         return None, None, None
-
-
-
 
     sudoku = property(_get_sudoku, _set_sudoku)
