@@ -136,7 +136,7 @@ class SolucionarSudoku:
         print(tmp2)
         print("\n")
 
-    def solucionar(self, reiniciar_apos=500):
+    def solucionar(self, reiniciar_apos=2000):
         """Realiza a busca pela solução do Sudoku."""
         convergencia = 10000
         sem_mudancas = 0
@@ -150,6 +150,7 @@ class SolucionarSudoku:
             convergencia, ilegais, resposta = self._verificar()
 
             self._exibir_resposta(convergencia, ilegais, resposta, valor, vmin)
+
 
             if len(solucoes_ruins) != 0:
                 if self.populacao.populacao[-1].tolist() in solucoes_ruins:
@@ -168,6 +169,8 @@ class SolucionarSudoku:
                 sem_mudancas = 0
 
             ultima_mudanca = convergencia
+
+
             if convergencia == 0:
                 break
 
