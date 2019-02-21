@@ -35,10 +35,10 @@ def bin(x):
 def xy(populacao):
     colunas = populacao.shape[1]
     meio = int(colunas / 2)
-    const = 2.0 ** meio - 1.0
+    maiorbin = 2.0 ** meio - 1.0
     nmin = -3
     nmax = 3
-    const = (nmax - nmin) / const
+    const = (nmax - nmin) / maiorbin
     x = nmin + const * bin(populacao[:,:meio])
     y = nmin + const * bin(populacao[:,meio:])
     return x, y
@@ -50,10 +50,10 @@ def avaliacao(populacao):
     return tmp
 
 
-cromossos_totais = 16
+genes_totais = 16
 tamanho_populacao = 100
 
-populacao = Populacao(avaliacao, cromossos_totais, tamanho_populacao)
+populacao = Populacao(avaliacao, genes_totais, tamanho_populacao)
 selecao = Roleta(populacao)
 cruzamento = KPontos(tamanho_populacao)
 mutacao = Flip(pmut=0.9)

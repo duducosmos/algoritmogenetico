@@ -23,16 +23,16 @@ class Populacao:
                             indivíduos na população.
     """
 
-    def __init__(self, avaliacao, cromossos_totais, tamanho_populacao):
+    def __init__(self, avaliacao, genes_totais, tamanho_populacao):
         self.avaliacao = avaliacao
-        self.cromossos_totais = cromossos_totais
+        self.genes_totais = genes_totais
         self.tamanho_populacao = tamanho_populacao
         self.gerar_populacao()
 
     def gerar_populacao(self):
         """Gerador aleatório de população."""
         self.populacao = randint(0, 2, size=(self.tamanho_populacao,
-                                             self.cromossos_totais),
+                                             self.genes_totais),
                                              dtype='b')
     def avaliar(self):
         """Avalia e ordena a população."""
