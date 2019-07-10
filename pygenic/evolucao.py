@@ -70,14 +70,12 @@ class Evolucao:
         """
         Evolução elitista, por uma geração, da popução.
         """
-        valores = self.populacao.avaliar()
+        fitness = self.populacao.avaliar()
         self._melhor_solucao = self.populacao.populacao[-1].copy()
-
-
 
         subpopulacao = self.selecao.selecao(self._nsele)
         populacao = self.cruzamento.descendentes(subpopulacao, pcruz=self._pcruz)
-        
+
         self.mutacao.populacao = populacao
         self.mutacao.mutacao()
         self.populacao.populacao[:] = populacao[:]
@@ -93,10 +91,6 @@ class Evolucao:
                 self._possivel_local = 0
                 self.populacao.gerar_populacao()
                 self.populacao.populacao[0] = self._melhor_solucao
-
-        valores = self.populacao.avaliar()
-
-        return valores.max(), valores.min()
 
     nsele = property(_get_nsele, _set_nsele)
     pcruz = property(_get_pcruz, _set_pcruz)

@@ -24,9 +24,10 @@ class Roleta(Selecao):
     def __init__(self, populacao):
         super(Roleta, self).__init__(populacao)
 
-    def selecionar(self):
+    def selecionar(self, fitness):
         """Roleta de seleção de indivíduos."""
-        fitness = self.populacao.avaliar()
+        if fitness is None:
+            fitness = self.populacao.avaliar()
         fmin = fitness.min()
         fitness = fitness - fmin
         total = fitness.sum()

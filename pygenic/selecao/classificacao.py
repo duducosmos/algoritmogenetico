@@ -23,9 +23,10 @@ class Classificacao(Selecao):
     def __init__(self, populacao):
         super(Classificacao, self).__init__(populacao)
 
-    def selecionar(self):
+    def selecionar(self, fitness):
         """Roleta de seleção de indivíduos."""
-        fitness = self.populacao.avaliar()
+        if fitness is None:
+            fitness = self.populacao.avaliar()
         classificacao = argsort(fitness) + 1
         total = classificacao.sum()
         parada = total * random()

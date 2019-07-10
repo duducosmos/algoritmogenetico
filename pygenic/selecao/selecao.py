@@ -21,14 +21,14 @@ class Selecao:
     def __init__(self, populacao):
         self.populacao = populacao
 
-    def selecionar(self):
+    def selecionar(self, fitness=None):
         raise NotImplementedError("A ser implementado")
 
-    def selecao(self, n):
+    def selecao(self, n, fitness=None):
         """
         Retorna uma população de tamanho n,
         selecionanda via roleta.
         """
-        progenitores = array([self.selecionar()
+        progenitores = array([self.selecionar(fitness)
                               for _ in range(n)])
         return self.populacao.populacao[progenitores]

@@ -24,9 +24,10 @@ class Torneio(Selecao):
         super(Torneio, self).__init__(populacao)
         self.tamanho = tamanho
 
-    def selecionar(self):
+    def selecionar(self, fitness):
         """Retorna o indivíduo campeão da rodada."""
-        fitness = self.populacao.avaliar()
+        if fitness is None:
+            fitness = self.populacao.avaliar()
         grupo = choice(fitness, size=self.tamanho)
         campeao = grupo.max()
         i = where(fitness == campeao)[0][0]
