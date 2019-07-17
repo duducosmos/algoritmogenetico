@@ -33,6 +33,7 @@ class Evolucao:
         self._pcruz = None
         self._epidemia = None
         self._manter_melhor = True
+        self._fitness = None
 
     def _set_epidemia(self, epidemia):
         self._epidemia = epidemia
@@ -70,10 +71,12 @@ class Evolucao:
         """
         Evolução elitista, por uma geração, da popução.
         """
-        fitness = self.populacao.avaliar()
+        #if self._fitness is None:
+        self._fitness = self.populacao.avaliar()
+
         self._melhor_solucao = self.populacao.populacao[-1].copy()
 
-        subpopulacao = self.selecao.selecao(self._nsele, fitness=fitness)
+        subpopulacao = self.selecao.selecao(self._nsele, fitness=self._fitness)
         populacao = self.cruzamento.descendentes(subpopulacao, pcruz=self._pcruz)
 
         self.mutacao.populacao = populacao
@@ -92,9 +95,9 @@ class Evolucao:
                 self.populacao.gerar_populacao()
                 self.populacao.populacao[0] = self._melhor_solucao
 
-        fitness = self.populacao.avaliar()
+        self._fitness = self.populacao.avaliar()
 
-        return fitness.min(), fitness.max()
+        return self._fitness.min(), self._fitness.max()
 
     nsele = property(_get_nsele, _set_nsele)
     pcruz = property(_get_pcruz, _set_pcruz)
