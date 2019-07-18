@@ -1,5 +1,7 @@
 from numpy import array, zeros, where, max, random
 
+
+
 class QMatrix:
     def __init__(self, R, alpha=0.8, verbose=False):
         self.R = R
@@ -7,7 +9,8 @@ class QMatrix:
         self.Q = zeros(R.shape)
         self.alpha = alpha
         self.epos, self.apos = self._states()
-        self._qsteps = self.epos.size
+        self._qsteps = R[(self.epos, self.apos)].size
+        self.nocon = 1000000000
 
     @property
     def get_nqsteps(self):
@@ -54,7 +57,7 @@ class QMatrix:
             steps += 1
             if steps >= self._qsteps:
                 maxsteps = True
-                steps = 1e9
+                steps = self._qsteps * self.nocon
                 if self.verbose is True or verbose is True:
                     print("not reached")
                 break
@@ -114,31 +117,34 @@ if __name__ == "__main__":
                ])
     '''
 
-    width = 6
+    width = 7
     img = array(make_maze(w=width, h=width)).astype(uint8)
 
 
     e, a, states, goal, R = gen_R(img)
-    print(goal)
+    print(R[R != -1].size)
 
     img2 = img.copy()
     img2[goal] = 150
 
-    plt.imshow(img2)
-    plt.show()
-    print("Number of possibles states: {}".format(e.size))
+
 
     ql = QMatrix(R, verbose=False)
 
     tamanho_populacao = 10
     cromossomos = ql.get_nqsteps
+    print(cromossomos)
+
+    plt.imshow(img2)
+    plt.show()
+    print("Number of possibles states: {}".format(e.size))
 
     tamanho = int(0.1 * tamanho_populacao)
     tamanho = tamanho if tamanho_populacao > 20 else 5
-    genes = 8 * cromossomos
-    pmut = 0.1
-    pcruz = 0.3
-    epidemia = 25
+    genes = 4 * cromossomos
+    pmut = 0.2
+    pcruz = 0.6
+    epidemia = None
     elitista = True
 
     def valores(populacao):
@@ -150,29 +156,22 @@ if __name__ == "__main__":
     def avaliacao(populacao):
         x = valores(populacao)
         n = len(populacao)
-
-
         peso = []
         es = list(set(ql.get_states[0]))
-        '''
-        n1 = int(len(es) * 0.2)
-        n1 = n1 if n1 > 0 else 1
-        es = random.choice(es, n1)
-        '''
-
+        e = random.choice(es, int(len(es) * 0.1))
         Q = zeros(R.shape)
 
         for k in range(n):
             Q[ql.get_states] = x[k, :]
+            #steps = ql.move(e, Q=Q)
             steps = 0
             for e in es:
                 steps += ql.move(e, Q=Q)
+
             peso.append(steps)
 
         peso = -array(peso).astype(int)
         return peso
-
-
 
     populacao = Populacao(avaliacao,
                                genes,
@@ -192,9 +191,19 @@ if __name__ == "__main__":
     evolucao.epidemia = epidemia
     evolucao.manter_melhor = elitista
 
-    for i in range(5000):
+    '''
+    for i in range(15000):
         vmin, vmax = evolucao.evoluir()
-        print(vmin, vmax)
+        print(evolucao.geracao, vmax)
+    '''
+
+
+    while True:
+        vmin, vmax = evolucao.evoluir()
+        print(evolucao.geracao, vmax)
+        if vmax > -(ql.nocon):
+            break
+
 
     x = valores(populacao.populacao)
     Q = zeros(R.shape)
@@ -203,3 +212,4 @@ if __name__ == "__main__":
     for e in es:
         print("\n")
         ql.move(e, Q=Q, verbose=True)
+    print(evolucao.geracao, vmax)
