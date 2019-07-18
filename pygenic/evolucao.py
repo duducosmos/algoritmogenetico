@@ -71,9 +71,7 @@ class Evolucao:
         """
         Evolução elitista, por uma geração, da popução.
         """
-        #if self._fitness is None:
         self._fitness = self.populacao.avaliar()
-
         self._melhor_solucao = self.populacao.populacao[-1].copy()
 
         subpopulacao = self.selecao.selecao(self._nsele, fitness=self._fitness)
@@ -82,8 +80,6 @@ class Evolucao:
         self.mutacao.populacao = populacao
         self.mutacao.mutacao()
         self.populacao.populacao[:] = populacao[:]
-        if self._manter_melhor is True:
-            self.populacao.populacao[0] = self._melhor_solucao
 
         self._geracao += 1
 
@@ -93,9 +89,15 @@ class Evolucao:
                 print("Epidemia")
                 self._possivel_local = 0
                 self.populacao.gerar_populacao()
-                self.populacao.populacao[0] = self._melhor_solucao
+
+        if self._manter_melhor is True:
+            self.populacao.populacao[0] = self._melhor_solucao
 
         self._fitness = self.populacao.avaliar()
+
+        #if self._manter_melhor is True:
+        #    self._melhor_solucao = self.populacao.populacao[-1].copy()
+
 
         return self._fitness.min(), self._fitness.max()
 

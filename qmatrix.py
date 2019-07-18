@@ -7,7 +7,7 @@ class QMatrix:
         self.Q = zeros(R.shape)
         self.alpha = alpha
         self.epos, self.apos = self._states()
-        self._qsteps = epos.size
+        self._qsteps = self.epos.size
 
     @property
     def get_nqsteps(self):
@@ -30,39 +30,71 @@ class QMatrix:
         a, b = where(self.R == max(self.R))
         return b[0]
 
-    def move(self, e, Q=None):
-        if self.verbose:
+    def move(self, e, Q=None, verbose=False):
+        if self.verbose is True or verbose is True:
             print("Started at {}".format(e))
         if self.Q is None:
             Q = self.Q
 
-        moviments = [e]
-
         goal = self.goal()
-        e = where(self.Q[e,:] == max(self.Q[e,:]))[0][0]
-        moviments.append(e)
+        e = where(Q[e,:] == max(Q[e,:]))[0][0]
 
-        if self.verbose:
+        if self.verbose is True or verbose is True:
             print("Moving to {}".format(e))
+            print("Goal to {}".format(goal))
 
         steps = 0
+        maxsteps = False
 
         while e != goal:
             a = e
-            e = where(self.Q[a,:] == max(self.Q[a,:]))[0][0]
-            moviments.append(e)
-
-            if self.verbose:
+            e = where(Q[a,:] == max(Q[a,:]))[0][0]
+            if self.verbose is True or verbose is True:
                 print("Moving from {0} to {1}".format(a, e))
             steps += 1
-            if stpes >= self._qsteps:
+            if steps >= self._qsteps:
+                maxsteps = True
+                steps = 1e9
+                if self.verbose is True or verbose is True:
+                    print("not reached")
                 break
-        if self.verbose:
-            print("The goal was reached...")
-        return moviments
+
+        return steps
+
+
+def gen_R(img, diagonal=True):
+    path = img.copy()
+    path = path.astype(int)
+    path[path == 0 ] = -1
+    path[path == 255] = 0
+
+    e, a = where(path != -1)
+    states = list(zip(e, a))
+    goal = states[random.randint(len(states) - 1)]
+    n = len(states)
+    R = -1 * ones((n, n))
+    for i in range(n):
+        for j in range(n):
+            tmp1 = states[i]
+            tmp2 = states[j]
+            diffa = abs(tmp1[0] - tmp2[0])
+            diffb = abs(tmp1[1] - tmp2[1])
+            if diffa <= 1 and diffb <= 1:
+                if diffa == 1 and diffb == 1 and diagonal is False:
+                    pass
+                else:
+                    if tmp1 != tmp2:
+                        if tmp2 == goal:
+                            R[i,j] = 100
+                        else:
+                            R[i,j] = 0
+    return e, a, states, goal, R
 
 if __name__ == "__main__":
-    from numpy import concatenate, hsplit
+    from makemaze import make_maze
+
+    from numpy import concatenate, hsplit, uint8, ones
+    import matplotlib.pyplot as plt
 
     from pygenic.populacao import Populacao
     from pygenic.selecao.torneio import Torneio
@@ -72,7 +104,7 @@ if __name__ == "__main__":
 
     from pygenic.tools import bcolors, binarray2int
 
-
+    '''
     R = array([[-1, -1, -1, -1, 0, -1],
                [-1, -1, -1, 0, -1, 255],
                [-1, -1, -1, 0, -1, -1],
@@ -80,16 +112,36 @@ if __name__ == "__main__":
                [0, -1, -1, 0, -1, 255],
                [-1, 0, -1, -1, 0, 255],
                ])
+    '''
 
-    ql = QLearning(R)
+    width = 6
+    img = array(make_maze(w=width, h=width)).astype(uint8)
 
-    tamanho_populacao = 50
-    cromossomos = ql.get_qsteps()
+
+    e, a, states, goal, R = gen_R(img)
+    print(goal)
+
+    img2 = img.copy()
+    img2[goal] = 150
+
+    plt.imshow(img2)
+    plt.show()
+    print("Number of possibles states: {}".format(e.size))
+
+    ql = QMatrix(R, verbose=False)
+
+    tamanho_populacao = 10
+    cromossomos = ql.get_nqsteps
 
     tamanho = int(0.1 * tamanho_populacao)
+    tamanho = tamanho if tamanho_populacao > 20 else 5
     genes = 8 * cromossomos
+    pmut = 0.1
+    pcruz = 0.3
+    epidemia = 25
+    elitista = True
 
-    def valores(populacao, cromossomos):
+    def valores(populacao):
         bx = hsplit(populacao, cromossomos)
         x = [binarray2int(xi) for xi in bx]
         x = concatenate(x).T.astype(int)
@@ -98,17 +150,26 @@ if __name__ == "__main__":
     def avaliacao(populacao):
         x = valores(populacao)
         n = len(populacao)
-        Q = zeros(R.shape)
+
 
         peso = []
+        es = list(set(ql.get_states[0]))
+        '''
+        n1 = int(len(es) * 0.2)
+        n1 = n1 if n1 > 0 else 1
+        es = random.choice(es, n1)
+        '''
 
-        e, a = ql.random_action()
+        Q = zeros(R.shape)
 
         for k in range(n):
-            Q[ql.get_states()] = x[k, :]
-            moviments = ql.move(self, e, Q=None)
-            peso.append(len(moviments))
-        peso = array(peso)
+            Q[ql.get_states] = x[k, :]
+            steps = 0
+            for e in es:
+                steps += ql.move(e, Q=Q)
+            peso.append(steps)
+
+        peso = -array(peso).astype(int)
         return peso
 
 
@@ -130,3 +191,15 @@ if __name__ == "__main__":
     evolucao.pcruz = pcruz
     evolucao.epidemia = epidemia
     evolucao.manter_melhor = elitista
+
+    for i in range(5000):
+        vmin, vmax = evolucao.evoluir()
+        print(vmin, vmax)
+
+    x = valores(populacao.populacao)
+    Q = zeros(R.shape)
+    Q[ql.get_states] = x[-1, :]
+    es = list(set(ql.get_states[0]))
+    for e in es:
+        print("\n")
+        ql.move(e, Q=Q, verbose=True)
