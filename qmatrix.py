@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     ql = QMatrix(R, verbose=False)
 
-    tamanho_populacao = 10
+    tamanho_populacao = 30
     cromossomos = ql.get_nqsteps
     print(cromossomos)
 
