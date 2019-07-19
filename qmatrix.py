@@ -10,7 +10,7 @@ class QMatrix:
         self.alpha = alpha
         self.epos, self.apos = self._states()
         self._qsteps = R[(self.epos, self.apos)].size
-        self.nocon = 1000000000
+        self.nocon = 1000000
 
     @property
     def get_nqsteps(self):
@@ -94,6 +94,8 @@ def gen_R(img, diagonal=True):
     return e, a, states, goal, R
 
 if __name__ == "__main__":
+    from pathos.multiprocessing import ProcessingPool as Pool
+
     from makemaze import make_maze
 
     from numpy import concatenate, hsplit, uint8, ones
@@ -101,6 +103,7 @@ if __name__ == "__main__":
 
     from pygenic.populacao import Populacao
     from pygenic.selecao.torneio import Torneio
+    from pygenic.selecao.roleta import Roleta
     from pygenic.cruzamento.embaralhamento import Embaralhamento
     from pygenic.mutacao.sequenciareversa import SequenciaReversa
     from pygenic.evolucao import Evolucao
@@ -144,7 +147,7 @@ if __name__ == "__main__":
     genes = 4 * cromossomos
     pmut = 0.2
     pcruz = 0.6
-    epidemia = None
+    epidemia = 100
     elitista = True
 
     def valores(populacao):
@@ -156,21 +159,15 @@ if __name__ == "__main__":
     def avaliacao(populacao):
         x = valores(populacao)
         n = len(populacao)
-        peso = []
+
         es = list(set(ql.get_states[0]))
-        e = random.choice(es, int(len(es) * 0.1))
-        Q = zeros(R.shape)
-
-        for k in range(n):
+        def steps(k):
+            Q = zeros(R.shape)
             Q[ql.get_states] = x[k, :]
-            #steps = ql.move(e, Q=Q)
-            steps = 0
-            for e in es:
-                steps += ql.move(e, Q=Q)
+            return sum([ql.move(e, Q=Q) for e in es])
 
-            peso.append(steps)
-
-        peso = -array(peso).astype(int)
+        pool = Pool(8)
+        peso = -array(pool.map(steps, range(n))).astype(int)
         return peso
 
     populacao = Populacao(avaliacao,
@@ -178,6 +175,7 @@ if __name__ == "__main__":
                                tamanho_populacao)
 
     selecao = Torneio(populacao, tamanho=tamanho)
+    #selecao = Roleta(populacao)
     cruzamento = Embaralhamento(tamanho_populacao)
     mutacao = SequenciaReversa(pmut=pmut)
 
@@ -196,13 +194,12 @@ if __name__ == "__main__":
         vmin, vmax = evolucao.evoluir()
         print(evolucao.geracao, vmax)
     '''
-
-
     while True:
         vmin, vmax = evolucao.evoluir()
         print(evolucao.geracao, vmax)
         if vmax > -(ql.nocon):
             break
+
 
 
     x = valores(populacao.populacao)
