@@ -2,68 +2,79 @@ from numpy import array, zeros, where, max, random
 
 
 
-class QMatrix:
-    def __init__(self, R, alpha=0.8, verbose=False):
+class LabMove:
+    def __init__(self, R, verbose=False):
         self.R = R
         self.verbose = verbose
-        self.Q = zeros(R.shape)
-        self.alpha = alpha
-        self.epos, self.apos = self._states()
-        self._qsteps = R[(self.epos, self.apos)].size
-        self.nocon = 1000000
+        self.nocon = -100
+
+    def goal(self):
+        return max(self.R)
 
     @property
     def get_nqsteps(self):
-        return self._qsteps
+        return self.nocon
 
-    @property
-    def get_states(self):
-        return (self.epos, self.apos)
+    def move(self, start, sequence, verbose=False):
+        '''
+        0 - no-move
+        1 - up
+        2 - down
+        3 - left
+        4 - right
 
-    def random_action(self):
-
-        e = random.choice(self.epos)
-        a = random.choice(self.apos[self.epos == e])
-        return e, a
-
-    def _states(self):
-        return where(self.R != -1)
-
-    def goal(self):
-        a, b = where(self.R == max(self.R))
-        return b[0]
-
-    def move(self, e, Q=None, verbose=False):
-        if self.verbose is True or verbose is True:
-            print("Started at {}".format(e))
-        if self.Q is None:
-            Q = self.Q
-
-        goal = self.goal()
-        e = where(Q[e,:] == max(Q[e,:]))[0][0]
+        '''
+        if len(start) != 2:
+            return None
 
         if self.verbose is True or verbose is True:
-            print("Moving to {}".format(e))
-            print("Goal to {}".format(goal))
+            print("Started at {}".format(start))
 
-        steps = 0
-        maxsteps = False
+        endi, endj = where(self.R == max(self.R))
+        endi, endj = endi[0], endj[0]
 
-        while e != goal:
-            a = e
-            e = where(Q[a,:] == max(Q[a,:]))[0][0]
-            if self.verbose is True or verbose is True:
-                print("Moving from {0} to {1}".format(a, e))
-            steps += 1
-            if steps >= self._qsteps:
-                maxsteps = True
-                steps = self._qsteps * self.nocon
-                if self.verbose is True or verbose is True:
-                    print("not reached")
+        if start[0] == endi and start[1] == endj:
+            return 0
+        lines, cols = self.R.shape
+
+        current = start
+        steps = self.nocon
+
+        for step in sequence:
+            i, j = current
+            if step == 1:
+                i = i - 1
+                if i < 0:
+                    steps += self.nocon
+                    break
+            elif step == 2:
+                i = i + 1
+                if i >= lines:
+                    steps += self.nocon
+                    break
+            elif step == 3:
+                j = j - 1
+                if j < 0:
+                    steps += self.nocon
+                    break
+            elif step == 4:
+                j = j + 1
+                if j >= cols:
+                    steps += self.nocon
+                    break
+
+            current = [i, j]
+
+            if self.R[i, j] == -1:
+                steps += self.nocon
                 break
 
+            if self.R[i, j] == self.goal():
+                steps += 1000
+                break
+            if self.R[i, j] == 0:
+                steps += 1
         return steps
-
 
 def gen_R(img, diagonal=True):
     path = img.copy()
@@ -125,16 +136,18 @@ if __name__ == "__main__":
 
 
     e, a, states, goal, R = gen_R(img)
-    print(R[R != -1].size)
+    s0, s1 = where(R != max(R))
+    options = list(zip(s0.tolist(), s1.tolist()))
+    startpoint = options[random.choice(list(range(len(options))))]
+    print(startpoint)
 
     img2 = img.copy()
     img2[goal] = 150
 
-    ql = QMatrix(R, verbose=False)
+    lm = LabMove(R, verbose=False)
 
     tamanho_populacao = 30
-    cromossomos = ql.get_nqsteps
-    print(cromossomos)
+    cromossomos = 30
 
     plt.imshow(img2)
     plt.show()
@@ -142,7 +155,7 @@ if __name__ == "__main__":
 
     tamanho = int(0.1 * tamanho_populacao)
     tamanho = tamanho if tamanho_populacao > 20 else 5
-    bits = 4
+    bits = 3
     genes = bits * cromossomos
     pmut = 0.2
     pcruz = 0.6
@@ -153,23 +166,20 @@ if __name__ == "__main__":
         bx = hsplit(populacao, cromossomos)
         #x = [binarray2int(xi) for xi in bx]
         const = 2 ** bits - 1
-        const = 100 / const
+        const = 4 / const
         x = [const * binarray2int(xi) for xi in bx]
-        x = concatenate(x).T.astype(float)
+        x = concatenate(x).T.astype(int)
         return x
 
     def avaliacao(populacao):
         x = valores(populacao)
         n = len(populacao)
-
-        es = list(set(ql.get_states[0]))
         def steps(k):
-            Q = zeros(R.shape)
-            Q[ql.get_states] = x[k, :]
-            return sum([ql.move(e, Q=Q) for e in es])
+            sequence = x[k, :]
+            return lm.move(startpoint, sequence=sequence)
 
         pool = Pool(nodes=12)
-        peso = -array(list(pool.imap(steps, range(n)))).astype(int)
+        peso = array(list(pool.imap(steps, range(n)))).astype(int)
         return peso
 
     populacao = Populacao(avaliacao,
@@ -198,17 +208,6 @@ if __name__ == "__main__":
     '''
     while True:
         vmin, vmax = evolucao.evoluir()
-        print(evolucao.geracao, vmax)
-        if vmax > -(ql.nocon):
+        print(evolucao.geracao, vmax, vmin)
+        if vmax > lm.nocon:
             break
-
-
-
-    x = valores(populacao.populacao)
-    Q = zeros(R.shape)
-    Q[ql.get_states] = x[-1, :]
-    es = list(set(ql.get_states[0]))
-    for e in es:
-        print("\n")
-        ql.move(e, Q=Q, verbose=True)
-    print(evolucao.geracao, vmax)
