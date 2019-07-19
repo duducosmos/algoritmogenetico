@@ -11,6 +11,10 @@ class LabMove:
     def goal(self):
         return max(self.R)
 
+    @property
+    def get_nqsteps(self):
+        return self.nocon
+
     def move(self, start, sequence, verbose=False):
         '''
         0 - no-move
@@ -132,8 +136,9 @@ if __name__ == "__main__":
 
 
     e, a, states, goal, R = gen_R(img)
-    s0, s1 = where(R != max(R)))
-    startpoint = random.choice(zip(s0.tolist(), s1.tolist()))
+    s0, s1 = where(R != max(R))
+    options = list(zip(s0.tolist(), s1.tolist()))
+    startpoint = options[random.choice(list(range(len(options))))]
     print(startpoint)
 
     img2 = img.copy()
@@ -174,7 +179,7 @@ if __name__ == "__main__":
             return lm.move(startpoint, sequence=sequence)
 
         pool = Pool(nodes=12)
-        peso = -array(list(pool.imap(steps, range(n)))).astype(int)
+        peso = array(list(pool.imap(steps, range(n)))).astype(int)
         return peso
 
     populacao = Populacao(avaliacao,
@@ -203,17 +208,6 @@ if __name__ == "__main__":
     '''
     while True:
         vmin, vmax = evolucao.evoluir()
-        print(evolucao.geracao, vmax)
-        if vmax > -(ql.nocon):
+        print(evolucao.geracao, vmax, vmin)
+        if vmax > lm.nocon:
             break
-
-
-
-    x = valores(populacao.populacao)
-    Q = zeros(R.shape)
-    Q[ql.get_states] = x[-1, :]
-    es = list(set(ql.get_states[0]))
-    for e in es:
-        print("\n")
-        ql.move(e, Q=Q, verbose=True)
-    print(evolucao.geracao, vmax)
