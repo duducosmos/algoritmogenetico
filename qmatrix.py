@@ -120,7 +120,7 @@ if __name__ == "__main__":
                ])
     '''
 
-    width = 7
+    width = 9
     img = array(make_maze(w=width, h=width)).astype(uint8)
 
 
@@ -129,8 +129,6 @@ if __name__ == "__main__":
 
     img2 = img.copy()
     img2[goal] = 150
-
-
 
     ql = QMatrix(R, verbose=False)
 
@@ -144,7 +142,8 @@ if __name__ == "__main__":
 
     tamanho = int(0.1 * tamanho_populacao)
     tamanho = tamanho if tamanho_populacao > 20 else 5
-    genes = 4 * cromossomos
+    bits = 4
+    genes = bits * cromossomos
     pmut = 0.2
     pcruz = 0.6
     epidemia = 100
@@ -152,8 +151,11 @@ if __name__ == "__main__":
 
     def valores(populacao):
         bx = hsplit(populacao, cromossomos)
-        x = [binarray2int(xi) for xi in bx]
-        x = concatenate(x).T.astype(int)
+        #x = [binarray2int(xi) for xi in bx]
+        const = 2 ** bits - 1
+        const = 100 / const
+        x = [const * binarray2int(xi) for xi in bx]
+        x = concatenate(x).T.astype(float)
         return x
 
     def avaliacao(populacao):
