@@ -120,7 +120,7 @@ if __name__ == "__main__":
                ])
     '''
 
-    width = 7
+    width = 27
     img = array(make_maze(w=width, h=width)).astype(uint8)
 
 
