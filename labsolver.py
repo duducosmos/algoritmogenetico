@@ -2,9 +2,9 @@ from numpy import concatenate, hsplit, uint8, ones, array, where
 from numpy import array, zeros, where, max, random, count_nonzero, sqrt, abs
 
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 
 from pathos.multiprocessing import ProcessingPool as Pool
+from pathos.helpers import cpu_count
 
 from pygenic.populacao import Populacao
 from pygenic.selecao.torneio import Torneio
@@ -83,7 +83,8 @@ def avaliacao(populacao):
 
 
     peso = None
-    with Pool(4) as pool:
+    ncpu = cpu_count()
+    with Pool(ncpu) as pool:
         peso = array(pool.map(steps, range(n)))
 
     return peso
@@ -113,12 +114,24 @@ for i in range(15000):
     vmin, vmax = evolucao.evoluir()
     print(evolucao.geracao, vmax)
 '''
-
+improving = False
+maximprov = 200
+cnt = 0
 while 1:
     vmin, vmax = evolucao.evoluir()
     print(evolucao.geracao, vmax, vmin)
     vc = vmax
-    if vmax >= convergencia or evolucao.geracao >= 10000:
+    if vmax >= convergencia and improving is False:
+        improving = True
+        evolucao.epidemia = None
+        print("improving")
+
+    if improving == True:
+        cnt += 1
+        if cnt >= maximprov:
+            break
+
+    if evolucao.geracao >= 10000:
         break
 
 
