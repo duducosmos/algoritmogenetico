@@ -1,213 +1,170 @@
-from numpy import array, zeros, where, max, random
-
+from numpy import array, uint8, where, max, random, count_nonzero
+from numpy import sqrt, abs, log, exp, floor
+import time
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, writers
 
 
 class LabMove:
-    def __init__(self, R, verbose=False):
+
+    def __init__(self, R, premio=100, penalidade=10, moeda=1):
         self.R = R
-        self.verbose = verbose
-        self.nocon = -100
+        self._penalidade = penalidade
+        self._premio = premio
+        self._moeda = moeda
+        self.size_lab = count_nonzero(R != -1)
+        self._x = None
+        self._y = None
+        self._endx, self._endy = self.ends()
+        self._lines, self._cols = self.R.shape
+
+
+    def set_x(self, x):
+        if x < 0:
+            x = 0
+        if x >= self._cols:
+            x = self._cols - 1
+        self._x = x
+
+    def set_y(self, y):
+        if y < 0:
+            y = 0
+        if y >= self._lines:
+            y = self._lines - 1
+        self._y = y
+
+    def get_y(self):
+        return self._y
+
+    def get_x(self):
+        return self._x
+
+    def _limits(self):
+        if self._y < 0:
+            self._y += 1
+        if self._y >= self._lines:
+            self._y -= 1
+
+    def move_up(self):
+        self._limits()
+        self._y -= 1
+        if self.R[self._x, self._y] == -1:
+            self._y += 1
+
+    def move_down(self):
+        self._limits()
+        self._y += 1
+        if self.R[self._x, self._y] == -1:
+            self._y -= 1
+
+    def move_left(self):
+        self._limits()
+        self._x -= 1
+        if self.R[self._x, self._y] == -1:
+            self._x += 1
+
+    def move_right(self):
+        self._limits()
+        self._x += 1
+        if self.R[self._x, self._y] == -1:
+            self._x -= 1
 
     def goal(self):
         return max(self.R)
 
-    @property
-    def get_nqsteps(self):
-        return self.nocon
+    def ends(self):
+        endi, endj = where(self.R == max(self.R))
+        return endi[0], endj[0]
 
-    def move(self, start, sequence, verbose=False):
+    def plot(self, start, sequence, save_file=None):
+        fig = plt.figure()
+        img2 = self.R.copy()
+        img2[self._endx, self._endy] = 200
+        im = plt.imshow(img2, animated=True)
+
+        self.x, self.y = start
+        self._stop = False
+
+        def updatefig(frame):
+            img2 = self.R.copy()
+            img2[img2 == 0] = 255
+            img2[img2 == -1] = 0
+            img2[self._endx, self._endy] = 50
+            step = sequence[frame]
+
+            if step == 1:
+                self.move_up()
+            elif step == 2:
+                self.move_down()
+            elif step == 3:
+                self.move_left()
+            elif step == 4:
+                self.move_right()
+
+            if self.x == self._endx and self.y == self._endy and self._stop == False:
+                self._stop = True
+                img2[self._endx, self._endy] = 100
+                print("Alcançado")
+
+
+            if self._stop == False:
+                img2[self.x, self.y] = 100
+
+            im.set_array(img2)
+
+            return im,
+
+        ani = FuncAnimation(fig,
+                            updatefig,
+                            frames=len(sequence),
+                            interval=50,
+                            blit=True)
+
+        if save_file is not None:
+            Writer = writers['ffmpeg']
+            writer = Writer(fps=10, metadata=dict(artist='Me'), bitrate=1800)
+            ani.save(save_file, writer=writer)
+        else:
+            plt.show()
+
+    def move(self, start, sequence):
         '''
-        0 - no-move
         1 - up
         2 - down
         3 - left
         4 - right
-
         '''
-        if len(start) != 2:
-            return None
-
-        if self.verbose is True or verbose is True:
-            print("Started at {}".format(start))
-
-        endi, endj = where(self.R == max(self.R))
-        endi, endj = endi[0], endj[0]
-
-        if start[0] == endi and start[1] == endj:
-            return 0
-        lines, cols = self.R.shape
-
-        current = start
-        steps = self.nocon
+        visitado = {tuple(start): 1}
+        self.x, self.y = start
+        pontos = 0
+        touched = False
 
         for step in sequence:
-            i, j = current
+
             if step == 1:
-                i = i - 1
-                if i < 0:
-                    steps += self.nocon
-                    break
+                self.move_up()
             elif step == 2:
-                i = i + 1
-                if i >= lines:
-                    steps += self.nocon
-                    break
+                self.move_down()
             elif step == 3:
-                j = j - 1
-                if j < 0:
-                    steps += self.nocon
-                    break
+                self.move_left()
             elif step == 4:
-                j = j + 1
-                if j >= cols:
-                    steps += self.nocon
-                    break
+                self.move_right()
 
-            current = [i, j]
+            if (self.x, self.y) not in visitado:
+                pontos += self._moeda
+                visitado[(self.x, self.y)] = 0
+            else:
+                if self.x != self._endx and self.y != self._endy:
+                    visitado[(self.x, self.y)] += 1
+                    pontos -= self._penalidade * visitado[(self.x, self.y)]
 
-            if self.R[i, j] == -1:
-                steps += self.nocon
-                break
+            if self.x == self._endx and self.y == self._endy:
+                pontos += self._premio
 
-            if self.R[i, j] == self.goal():
-                steps += 1000
-                break
-            if self.R[i, j] == 0:
-                steps += 1
-        return steps
+        d = abs(self.x - self._endx) + abs(self.y - self._endy)
+        pontos -= d
 
-def gen_R(img, diagonal=True):
-    path = img.copy()
-    path = path.astype(int)
-    path[path == 0 ] = -1
-    path[path == 255] = 0
+        return pontos
 
-    e, a = where(path != -1)
-    states = list(zip(e, a))
-    goal = states[random.randint(len(states) - 1)]
-    n = len(states)
-    R = -1 * ones((n, n))
-    for i in range(n):
-        for j in range(n):
-            tmp1 = states[i]
-            tmp2 = states[j]
-            diffa = abs(tmp1[0] - tmp2[0])
-            diffb = abs(tmp1[1] - tmp2[1])
-            if diffa <= 1 and diffb <= 1:
-                if diffa == 1 and diffb == 1 and diagonal is False:
-                    pass
-                else:
-                    if tmp1 != tmp2:
-                        if tmp2 == goal:
-                            R[i,j] = 100
-                        else:
-                            R[i,j] = 0
-    return e, a, states, goal, R
-
-if __name__ == "__main__":
-    from pathos.pools import ProcessPool as Pool
-
-    from makemaze import make_maze
-
-    from numpy import concatenate, hsplit, uint8, ones
-    import matplotlib.pyplot as plt
-
-    from pygenic.populacao import Populacao
-    from pygenic.selecao.torneio import Torneio
-    from pygenic.selecao.roleta import Roleta
-    from pygenic.cruzamento.embaralhamento import Embaralhamento
-    from pygenic.mutacao.sequenciareversa import SequenciaReversa
-    from pygenic.evolucao import Evolucao
-
-    from pygenic.tools import bcolors, binarray2int
-
-    '''
-    R = array([[-1, -1, -1, -1, 0, -1],
-               [-1, -1, -1, 0, -1, 255],
-               [-1, -1, -1, 0, -1, -1],
-               [-1, 0, 0, -1, 0, -1],
-               [0, -1, -1, 0, -1, 255],
-               [-1, 0, -1, -1, 0, 255],
-               ])
-    '''
-
-    width = 7
-    img = array(make_maze(w=width, h=width)).astype(uint8)
-
-
-    e, a, states, goal, R = gen_R(img)
-    s0, s1 = where(R != max(R))
-    options = list(zip(s0.tolist(), s1.tolist()))
-    startpoint = options[random.choice(list(range(len(options))))]
-    print(startpoint)
-
-    img2 = img.copy()
-    img2[goal] = 150
-
-    lm = LabMove(R, verbose=False)
-
-    tamanho_populacao = 30
-    cromossomos = 30
-
-    plt.imshow(img2)
-    plt.show()
-    print("Number of possibles states: {}".format(e.size))
-
-    tamanho = int(0.1 * tamanho_populacao)
-    tamanho = tamanho if tamanho_populacao > 20 else 5
-    bits = 3
-    genes = bits * cromossomos
-    pmut = 0.2
-    pcruz = 0.6
-    epidemia = 100
-    elitista = True
-
-    def valores(populacao):
-        bx = hsplit(populacao, cromossomos)
-        #x = [binarray2int(xi) for xi in bx]
-        const = 2 ** bits - 1
-        const = 4 / const
-        x = [const * binarray2int(xi) for xi in bx]
-        x = concatenate(x).T.astype(int)
-        return x
-
-    def avaliacao(populacao):
-        x = valores(populacao)
-        n = len(populacao)
-        def steps(k):
-            sequence = x[k, :]
-            return lm.move(startpoint, sequence=sequence)
-
-        pool = Pool(nodes=12)
-        peso = array(list(pool.imap(steps, range(n)))).astype(int)
-        return peso
-
-    populacao = Populacao(avaliacao,
-                               genes,
-                               tamanho_populacao)
-
-    selecao = Torneio(populacao, tamanho=tamanho)
-    #selecao = Roleta(populacao)
-    cruzamento = Embaralhamento(tamanho_populacao)
-    mutacao = SequenciaReversa(pmut=pmut)
-
-    evolucao = Evolucao(populacao,
-                             selecao,
-                             cruzamento,
-                             mutacao)
-
-    evolucao.nsele = tamanho
-    evolucao.pcruz = pcruz
-    evolucao.epidemia = epidemia
-    evolucao.manter_melhor = elitista
-
-    '''
-    for i in range(15000):
-        vmin, vmax = evolucao.evoluir()
-        print(evolucao.geracao, vmax)
-    '''
-    while True:
-        vmin, vmax = evolucao.evoluir()
-        print(evolucao.geracao, vmax, vmin)
-        if vmax > lm.nocon:
-            break
+    x = property(get_x, set_x)
+    y = property(get_y, set_y)
