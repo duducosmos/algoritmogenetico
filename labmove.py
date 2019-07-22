@@ -1,21 +1,23 @@
-from numpy import array, uint8, where, max, random, count_nonzero, sqrt, abs
+from numpy import array, uint8, where, max, random, count_nonzero
+from numpy import sqrt, abs, log, exp, floor
 import time
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-
+from matplotlib.animation import FuncAnimation, writers
 
 
 class LabMove:
 
-    def __init__(self, R, premio=10, penalidade=10):
+    def __init__(self, R, premio=100, penalidade=10, moeda=1):
         self.R = R
         self._penalidade = penalidade
         self._premio = premio
+        self._moeda = moeda
         self.size_lab = count_nonzero(R != -1)
         self._x = None
         self._y = None
         self._endx, self._endy = self.ends()
         self._lines, self._cols = self.R.shape
+
 
     def set_x(self, x):
         if x < 0:
@@ -74,7 +76,7 @@ class LabMove:
         endi, endj = where(self.R == max(self.R))
         return endi[0], endj[0]
 
-    def plot(self, start, sequence):
+    def plot(self, start, sequence, save_file=None):
         fig = plt.figure()
         img2 = self.R.copy()
         img2[self._endx, self._endy] = 200
@@ -102,20 +104,28 @@ class LabMove:
             if self.x == self._endx and self.y == self._endy and self._stop == False:
                 self._stop = True
                 img2[self._endx, self._endy] = 100
+                print("Alcançado")
 
 
             if self._stop == False:
                 img2[self.x, self.y] = 100
 
             im.set_array(img2)
+
             return im,
 
         ani = FuncAnimation(fig,
                             updatefig,
                             frames=len(sequence),
-                            interval=150,
+                            interval=50,
                             blit=True)
-        plt.show()
+
+        if save_file is not None:
+            Writer = writers['ffmpeg']
+            writer = Writer(fps=10, metadata=dict(artist='Me'), bitrate=1800)
+            ani.save(save_file, writer=writer)
+        else:
+            plt.show()
 
     def move(self, start, sequence):
         '''
@@ -124,12 +134,12 @@ class LabMove:
         3 - left
         4 - right
         '''
-
-        path = [tuple(start)]
+        visitado = [tuple(start)]
         self.x, self.y = start
-        penalidades = 0
+        pontos = 0
         touched = False
         for step in sequence:
+
             if step == 1:
                 self.move_up()
             elif step == 2:
@@ -139,22 +149,20 @@ class LabMove:
             elif step == 4:
                 self.move_right()
 
-            if (self.x, self.y) not in path:
-                path.append((self.x, self.y))
+            d = abs(self.x - self._endx) + abs(self.y - self._endy)
+            pontos -= d
+
+            if (self.x, self.y) not in visitado:
+                pontos += self._moeda / (1 + d)
+                visitado.append((self.x, self.y))
             else:
                 if self.x != self._endx and self.y != self._endy :
-                    penalidades += self._penalidade
+                    pontos -= self._penalidade
 
-            d = sqrt((self._endx - self.x) ** 2.0 + (self._endy  - self.y) ** 2.0)
+            if self._endx == self.x and self._endy == self.y:
+                pontos += self._premio
 
-            if d == 0 and touched is False:
-                penalidades -= self._premio
-                touched = True
-
-        d = abs(self._endx - self.x) + abs(self._endy  - self.y)
-        penalidades += d
-
-        return penalidades
+        return pontos
 
     x = property(get_x, set_x)
     y = property(get_y, set_y)

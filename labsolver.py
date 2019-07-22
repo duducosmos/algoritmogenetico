@@ -19,12 +19,8 @@ from pygenic.tools import bcolors, binarray2int
 from labmove import LabMove
 from makemaze import make_maze
 
-
-
-
-width = 3
+width = 11
 img = array(make_maze(w=width, h=width)).astype(int)
-print(img)
 img[img == 0] = -1
 img[img == 255] = 0
 
@@ -33,35 +29,39 @@ options = list(zip(s0.tolist(), s1.tolist()))
 goal = options[random.choice(list(range(len(options))))]
 
 img[goal] = 255
-print(img)
 
-
-gs0, s1 = where(img == 0)
+s0, s1 = where(img == 0)
 options = list(zip(s0.tolist(), s1.tolist()))
 startpoint = options[random.choice(list(range(len(options))))]
-
+size_lab = count_nonzero(img != -1)
+print("Tamanho Lab {}".format(size_lab))
 
 print(startpoint)
-imgview = img.copy()
-imgview[goal] = 5
-imgview[startpoint] = 5
+imgview = img.copy().astype(uint8)
+imgview[goal] = 100
+imgview[startpoint] = 50
 
 
 plt.imshow(imgview)
+
 plt.show()
+premio = 10000
+moeda = 10
+penalidade = 2 * moeda
+convergencia = premio
 
-lm = LabMove(img)
+lm = LabMove(img, premio=premio, penalidade=penalidade, moeda=moeda)
 
-tamanho_populacao = 100
-cromossomos = 300
+tamanho_populacao = 150
+cromossomos = int(2 * size_lab)
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
-bits = 3
+bits = 2
 genes = bits * cromossomos
-pmut = 0.3
+pmut = 0.1
 pcruz = 0.5
-epidemia = 500
+epidemia = 200
 elitista = True
 
 def valores(populacao):
@@ -84,7 +84,7 @@ def avaliacao(populacao):
 
     peso = None
     with Pool(4) as pool:
-        peso = - array(pool.map(steps, range(n)))
+        peso = array(pool.map(steps, range(n)))
 
     #peso = - array([steps(k) for k in range(n)])
     return peso
@@ -119,10 +119,10 @@ while 1:
     vmin, vmax = evolucao.evoluir()
     print(evolucao.geracao, vmax, vmin)
     vc = vmax
-    if vmax >= 0 or evolucao.geracao >= 5000:
+    if vmax >= convergencia or evolucao.geracao >= 15000:
         break
 
 
 x = valores(populacao.populacao)
 sequence = x[-1, :]
-lm.plot(startpoint, sequence=sequence)
+lm.plot(startpoint, sequence=sequence, save_file="./videos/lab.mp4")
