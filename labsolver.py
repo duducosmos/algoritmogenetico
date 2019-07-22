@@ -46,14 +46,14 @@ plt.imshow(imgview)
 
 plt.show()
 premio = 10000
-moeda = 10
-penalidade = 2 * moeda
+moeda = 1
+penalidade = 10
 convergencia = premio
 
 lm = LabMove(img, premio=premio, penalidade=penalidade, moeda=moeda)
 
-tamanho_populacao = 150
-cromossomos = int(2 * size_lab)
+tamanho_populacao = 50
+cromossomos = 4 * size_lab
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
@@ -61,7 +61,7 @@ bits = 2
 genes = bits * cromossomos
 pmut = 0.1
 pcruz = 0.5
-epidemia = 200
+epidemia = 50
 elitista = True
 
 def valores(populacao):
@@ -86,7 +86,6 @@ def avaliacao(populacao):
     with Pool(4) as pool:
         peso = array(pool.map(steps, range(n)))
 
-    #peso = - array([steps(k) for k in range(n)])
     return peso
 
 populacao = Populacao(avaliacao,
@@ -119,7 +118,7 @@ while 1:
     vmin, vmax = evolucao.evoluir()
     print(evolucao.geracao, vmax, vmin)
     vc = vmax
-    if vmax >= convergencia or evolucao.geracao >= 15000:
+    if vmax >= convergencia or evolucao.geracao >= 10000:
         break
 
 

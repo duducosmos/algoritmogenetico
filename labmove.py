@@ -134,10 +134,11 @@ class LabMove:
         3 - left
         4 - right
         '''
-        visitado = [tuple(start)]
+        visitado = {tuple(start): 1}
         self.x, self.y = start
         pontos = 0
         touched = False
+
         for step in sequence:
 
             if step == 1:
@@ -149,18 +150,19 @@ class LabMove:
             elif step == 4:
                 self.move_right()
 
-            d = abs(self.x - self._endx) + abs(self.y - self._endy)
-            pontos -= d
-
             if (self.x, self.y) not in visitado:
-                pontos += self._moeda / (1 + d)
-                visitado.append((self.x, self.y))
+                pontos += self._moeda
+                visitado[(self.x, self.y)] = 0
             else:
-                if self.x != self._endx and self.y != self._endy :
-                    pontos -= self._penalidade
+                if self.x != self._endx and self.y != self._endy:
+                    visitado[(self.x, self.y)] += 1
+                    pontos -= self._penalidade * visitado[(self.x, self.y)]
 
-            if self._endx == self.x and self._endy == self.y:
+            if self.x == self._endx and self.y == self._endy:
                 pontos += self._premio
+
+        d = abs(self.x - self._endx) + abs(self.y - self._endy)
+        pontos -= d
 
         return pontos
 
