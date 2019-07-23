@@ -19,7 +19,7 @@ from pygenic.tools import bcolors, binarray2int
 from labmove import LabMove
 from makemaze import make_maze
 
-width = 11
+width = 17
 img = array(make_maze(w=width, h=width)).astype(int)
 img[img == 0] = -1
 img[img == 255] = 0
@@ -53,7 +53,7 @@ convergencia = premio
 lm = LabMove(img, premio=premio, penalidade=penalidade, moeda=moeda)
 
 tamanho_populacao = 50
-cromossomos = 8 * size_lab
+cromossomos = 12 * size_lab
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
