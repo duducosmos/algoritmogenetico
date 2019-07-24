@@ -76,7 +76,7 @@ class LabMove:
         endi, endj = where(self.R == max(self.R))
         return endi[0], endj[0]
 
-    def plot(self, start, sequence, save_file=None):
+    def plot(self, start, sequence, interval=10, save_file=None):
         fig = plt.figure()
         img2 = self.R.copy()
         img2[self._endx, self._endy] = 200
@@ -117,7 +117,7 @@ class LabMove:
         ani = FuncAnimation(fig,
                             updatefig,
                             frames=len(sequence),
-                            interval=50,
+                            interval=interval,
                             blit=True)
 
         if save_file is not None:
@@ -161,8 +161,8 @@ class LabMove:
             if self.x == self._endx and self.y == self._endy:
                 pontos += self._premio
 
-        d = abs(self.x - self._endx) + abs(self.y - self._endy)
-        pontos -= d
+        #d = abs(self.x - self._endx) + abs(self.y - self._endy)
+        #pontos -= d
 
         return pontos
 

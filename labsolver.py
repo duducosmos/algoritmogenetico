@@ -19,7 +19,7 @@ from pygenic.tools import bcolors, binarray2int
 from labmove import LabMove
 from makemaze import make_maze
 
-width = 11
+width = 14
 img = array(make_maze(w=width, h=width)).astype(int)
 img[img == 0] = -1
 img[img == 255] = 0
@@ -45,15 +45,15 @@ imgview[startpoint] = 50
 plt.imshow(imgview)
 
 plt.show()
-premio = 10000
-moeda = 1
-penalidade = 10
+premio = 100000
+moeda = 1000
+penalidade = 100
 convergencia = premio
 
 lm = LabMove(img, premio=premio, penalidade=penalidade, moeda=moeda)
 
-tamanho_populacao = 50
-cromossomos = 8 * size_lab
+tamanho_populacao = 100
+cromossomos = size_lab
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
@@ -115,12 +115,19 @@ for i in range(15000):
     print(evolucao.geracao, vmax)
 '''
 improving = False
-maximprov = 200
+maximprov = 1000
 cnt = 0
 while 1:
     vmin, vmax = evolucao.evoluir()
     print(evolucao.geracao, vmax, vmin)
     vc = vmax
+    '''
+    if evolucao.geracao % 50 == 0 and improving is False:
+        x = valores(populacao.populacao)
+        sequence = x[-1, :]
+        lm.plot(startpoint, sequence=sequence, interval=1)
+    '''
+
     if vmax >= convergencia and improving is False:
         improving = True
         evolucao.epidemia = None
@@ -131,7 +138,7 @@ while 1:
         if cnt >= maximprov:
             break
 
-    if evolucao.geracao >= 10000:
+    if evolucao.geracao >= 15000:
         break
 
 
