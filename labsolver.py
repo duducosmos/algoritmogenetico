@@ -46,7 +46,7 @@ plt.imshow(imgview)
 
 plt.show()
 premio = 10000
-moeda = 0
+moeda = 10
 penalidade = 1
 convergencia = premio
 
