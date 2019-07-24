@@ -19,7 +19,7 @@ from pygenic.tools import bcolors, binarray2int
 from labmove import LabMove
 from makemaze import make_maze
 
-width = 17
+width = 7
 img = array(make_maze(w=width, h=width)).astype(int)
 img[img == 0] = -1
 img[img == 255] = 0
@@ -45,15 +45,17 @@ imgview[startpoint] = 50
 plt.imshow(imgview)
 
 plt.show()
-premio = 10000
+premio = 100000
 moeda = 10
 penalidade = 1
+introns = premio // 2
 convergencia = premio
 
-lm = LabMove(img, premio=premio, penalidade=penalidade, moeda=moeda)
+lm = LabMove(img, premio=premio, penalidade=penalidade,
+                  moeda=moeda, introns=introns)
 
 tamanho_populacao = 50
-cromossomos = 30
+cromossomos = 2 * 60
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
@@ -115,7 +117,7 @@ for i in range(15000):
     print(evolucao.geracao, vmax)
 '''
 improving = False
-maximprov = 1000
+maximprov = 100
 cnt = 0
 while 1:
     vmin, vmax = evolucao.evoluir()
@@ -138,10 +140,15 @@ while 1:
         if cnt >= maximprov:
             break
 
-    if evolucao.geracao >= 15000:
+    if evolucao.geracao >= 10000:
         break
 
 
 x = valores(populacao.populacao)
 sequence = x[-1, :]
 lm.plot(startpoint, sequence=sequence, save_file="./videos/lab.mp4")
+for i in range(0, len(sequence) -1, 2):
+    if sequence[i+1] not in [1, 2, 3, 4]:
+        print("Intron {0}, {1}".format(sequence[i], sequence[i+1]))
+    else:
+        print("Exon {0}, {1}".format(sequence[i], sequence[i+1]))
