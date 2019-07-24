@@ -85,30 +85,38 @@ class LabMove:
         self.x, self.y = start
         self._stop = False
 
+        self._curr0 = 0
+        self._curr1 = 1
+
         def updatefig(frame):
             img2 = self.R.copy()
             img2[img2 == 0] = 255
             img2[img2 == -1] = 0
             img2[self._endx, self._endy] = 50
-            step = sequence[frame]
+            steps = sequence[self._curr0] * [sequence[self._curr1]]
 
-            if step == 1:
-                self.move_up()
-            elif step == 2:
-                self.move_down()
-            elif step == 3:
-                self.move_left()
-            elif step == 4:
-                self.move_right()
+            self._curr0 += 1
+            self._curr1 += 1
 
-            if self.x == self._endx and self.y == self._endy and self._stop == False:
-                self._stop = True
-                img2[self._endx, self._endy] = 100
-                print("Alcançado")
+            if sequence[self._curr1] in [1, 2, 3, 4]:
+                for step in steps:
+                    if step == 1:
+                        self.move_up()
+                    elif step == 2:
+                        self.move_down()
+                    elif step == 3:
+                        self.move_left()
+                    elif step == 4:
+                        self.move_right()
+
+                    if self.x == self._endx and self.y == self._endy and self._stop == False:
+                        self._stop = True
+                        img2[self._endx, self._endy] = 100
+                        print("Alcançado")
 
 
-            if self._stop == False:
-                img2[self.x, self.y] = 100
+                    if self._stop == False:
+                        img2[self.x, self.y] = 100
 
             im.set_array(img2)
 
@@ -116,8 +124,8 @@ class LabMove:
 
         ani = FuncAnimation(fig,
                             updatefig,
-                            frames=len(sequence),
-                            interval=interval,
+                            frames=len(sequence) - 1,
+                            interval=50,
                             blit=True)
 
         if save_file is not None:
@@ -139,27 +147,35 @@ class LabMove:
         pontos = 0
         touched = False
 
-        for step in sequence:
-
-            if step == 1:
-                self.move_up()
-            elif step == 2:
-                self.move_down()
-            elif step == 3:
-                self.move_left()
-            elif step == 4:
-                self.move_right()
-
-            if (self.x, self.y) not in visitado:
-                pontos += self._moeda
-                visitado[(self.x, self.y)] = 0
+        for i in range(0, len(sequence) -1, 2):
+            steps = sequence[i] * [sequence[i + 1]]
+            if sequence[i + 1] not in [1, 2, 3, 4]:
+                pontos -= self._premio * 100
             else:
-                if self.x != self._endx and self.y != self._endy:
-                    visitado[(self.x, self.y)] += 1
-                    pontos -= self._penalidade * visitado[(self.x, self.y)]
+                for step in steps:
 
-            if self.x == self._endx and self.y == self._endy:
-                pontos += self._premio
+                    if step == 1:
+                        self.move_up()
+                    elif step == 2:
+                        self.move_down()
+                    elif step == 3:
+                        self.move_left()
+                    elif step == 4:
+                        self.move_right()
+
+                    #d = abs(self.x - self._endx) + abs(self.y - self._endy)
+                    #pontos -= d
+
+                    if (self.x, self.y) not in visitado:
+                        pontos += self._moeda
+                        visitado[(self.x, self.y)] = 0
+                    else:
+                        if self.x != self._endx and self.y != self._endy:
+                            visitado[(self.x, self.y)] += 1
+                            pontos -= self._penalidade * visitado[(self.x, self.y)]
+
+                    if self.x == self._endx and self.y == self._endy:
+                        pontos += self._premio
 
         #d = abs(self.x - self._endx) + abs(self.y - self._endy)
         #pontos -= d

@@ -19,7 +19,7 @@ from pygenic.tools import bcolors, binarray2int
 from labmove import LabMove
 from makemaze import make_maze
 
-width = 14
+width = 17
 img = array(make_maze(w=width, h=width)).astype(int)
 img[img == 0] = -1
 img[img == 255] = 0
@@ -45,30 +45,30 @@ imgview[startpoint] = 50
 plt.imshow(imgview)
 
 plt.show()
-premio = 100000
-moeda = 1000
-penalidade = 100
+premio = 10000
+moeda = 10
+penalidade = 1
 convergencia = premio
 
 lm = LabMove(img, premio=premio, penalidade=penalidade, moeda=moeda)
 
-tamanho_populacao = 100
-cromossomos = size_lab
+tamanho_populacao = 50
+cromossomos = 30
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
-bits = 2
+bits = 4
 genes = bits * cromossomos
-pmut = 0.1
-pcruz = 0.5
-epidemia = 50
+pmut = 0.01
+pcruz = 0.6
+epidemia = 500
 elitista = True
 
 def valores(populacao):
     bx = hsplit(populacao, cromossomos)
     #x = [binarray2int(xi) for xi in bx]
     const = 2 ** bits - 1
-    const = (4 -1)/ const
+    const = (10 - 1)/ const
     x = [1 + const * binarray2int(xi) for xi in bx]
     x = concatenate(x).T.astype(int)
     return x
