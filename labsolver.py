@@ -46,14 +46,14 @@ plt.imshow(imgview)
 
 plt.show()
 premio = 10000
-moeda = 10
+moeda = 1
 penalidade = 1
 convergencia = premio
 
 lm = LabMove(img, premio=premio, penalidade=penalidade, moeda=moeda)
 
 tamanho_populacao = 50
-cromossomos = 30
+cromossomos = 10
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
