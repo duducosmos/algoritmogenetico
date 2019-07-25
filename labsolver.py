@@ -147,11 +147,15 @@ x = valores(populacao.populacao)
 sequence = x[-1, :]
 option = {(1, 2, 1) : 1, (2, 1, 2): 2, (3, 4, 3): 3, (4, 3, 4): 4}
 clean = []
-for i in range(0, sequence.size, 3):
+nf = sequence.size % 3
+
+for i in range(0, sequence.size - nf, 3):
     tmp = tuple(sequence[i:i+3].tolist())
     if tmp in options:
         clean.append(options[tmp])
     else:
         clean += list(tmp)
+
+clean += sequence[-nf:].tolist()
 
 lm.plot(startpoint, sequence=clean, save_file="./videos/lab.mp4")
