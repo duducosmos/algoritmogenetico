@@ -19,7 +19,7 @@ from pygenic.tools import bcolors, binarray2int
 from labmove import LabMove
 from makemaze import make_maze
 
-width = 7
+width = 10
 img = array(make_maze(w=width, h=width)).astype(int)
 img[img == 0] = -1
 img[img == 255] = 0
@@ -46,20 +46,19 @@ plt.imshow(imgview)
 
 plt.show()
 premio = 100000
-moeda = 10
-penalidade = 1
-introns = premio // 2
+moeda = 1
+penalidade = 100
 convergencia = premio
 
 lm = LabMove(img, premio=premio, penalidade=penalidade,
-                  moeda=moeda, introns=introns)
+                  moeda=moeda)
 
-tamanho_populacao = 100
-cromossomos = 2 * 60
+tamanho_populacao = 50
+cromossomos = 8 * size_lab
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
-bits = 4
+bits = 2
 genes = bits * cromossomos
 pmut = 0.001
 pcruz = 0.6
@@ -70,7 +69,7 @@ def valores(populacao):
     bx = hsplit(populacao, cromossomos)
     #x = [binarray2int(xi) for xi in bx]
     const = 2 ** bits - 1
-    const = (10 - 1)/ const
+    const = (3)/ const
     x = [1 + const * binarray2int(xi) for xi in bx]
     x = concatenate(x).T.astype(int)
     return x
@@ -117,7 +116,7 @@ for i in range(15000):
     print(evolucao.geracao, vmax)
 '''
 improving = False
-maximprov = 100
+maximprov = 10
 cnt = 0
 while 1:
     vmin, vmax = evolucao.evoluir()
@@ -146,9 +145,17 @@ while 1:
 
 x = valores(populacao.populacao)
 sequence = x[-1, :]
-lm.plot(startpoint, sequence=sequence, save_file="./videos/lab.mp4")
-for i in range(0, len(sequence) -1, 2):
-    if sequence[i+1] not in [1, 2, 3, 4]:
-        print("Intron {0}, {1}".format(sequence[i], sequence[i+1]))
+option = {(1, 2, 1) : 1, (2, 1, 2): 2, (3, 4, 3): 3, (4, 3, 4): 4}
+clean = []
+nf = sequence.size % 3
+
+for i in range(0, sequence.size - nf, 3):
+    tmp = tuple(sequence[i:i+3].tolist())
+    if tmp in options:
+        clean.append(options[tmp])
     else:
-        print("Exon {0}, {1}".format(sequence[i], sequence[i+1]))
+        clean += list(tmp)
+
+clean += sequence[-nf:].tolist()
+
+lm.plot(startpoint, sequence=clean, save_file="./videos/lab.mp4")
