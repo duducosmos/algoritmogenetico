@@ -19,7 +19,7 @@ from pygenic.tools import bcolors, binarray2int
 from labmove import LabMove
 from makemaze import make_maze
 
-width = 17
+width = 10
 img = array(make_maze(w=width, h=width)).astype(int)
 img[img == 0] = -1
 img[img == 255] = 0
@@ -45,19 +45,20 @@ imgview[startpoint] = 50
 plt.imshow(imgview)
 
 plt.show()
-premio = 10000
+premio = 100000
 moeda = 1
-penalidade = 1
+penalidade = 10
 convergencia = premio
 
-lm = LabMove(img, premio=premio, penalidade=penalidade, moeda=moeda)
+lm = LabMove(img, premio=premio, penalidade=penalidade,
+                  moeda=moeda)
 
 tamanho_populacao = 50
-cromossomos = 10
+cromossomos = 8 * size_lab
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
-bits = 4
+bits = 2
 genes = bits * cromossomos
 pmut = 0.01
 pcruz = 0.6
@@ -68,7 +69,7 @@ def valores(populacao):
     bx = hsplit(populacao, cromossomos)
     #x = [binarray2int(xi) for xi in bx]
     const = 2 ** bits - 1
-    const = (10 - 1)/ const
+    const = (3)/ const
     x = [1 + const * binarray2int(xi) for xi in bx]
     x = concatenate(x).T.astype(int)
     return x
@@ -115,12 +116,19 @@ for i in range(15000):
     print(evolucao.geracao, vmax)
 '''
 improving = False
-maximprov = 200
+maximprov = 100
 cnt = 0
 while 1:
     vmin, vmax = evolucao.evoluir()
     print(evolucao.geracao, vmax, vmin)
     vc = vmax
+    '''
+    if evolucao.geracao % 50 == 0 and improving is False:
+        x = valores(populacao.populacao)
+        sequence = x[-1, :]
+        lm.plot(startpoint, sequence=sequence, interval=1)
+    '''
+
     if vmax >= convergencia and improving is False:
         improving = True
         evolucao.epidemia = None
