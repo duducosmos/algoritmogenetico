@@ -121,7 +121,7 @@ class LabMove:
 
         if save_file is not None:
             Writer = writers['ffmpeg']
-            writer = Writer(fps=10, metadata=dict(artist='Me'), bitrate=1800)
+            writer = Writer(fps=29, metadata=dict(artist='Me'), bitrate=1800)
             ani.save(save_file, writer=writer)
         else:
             plt.show()

@@ -47,7 +47,7 @@ plt.imshow(imgview)
 plt.show()
 premio = 100000
 moeda = 1
-penalidade = 10
+penalidade = 100
 convergencia = premio
 
 lm = LabMove(img, premio=premio, penalidade=penalidade,
@@ -116,7 +116,7 @@ for i in range(15000):
     print(evolucao.geracao, vmax)
 '''
 improving = False
-maximprov = 100
+maximprov = 10
 cnt = 0
 while 1:
     vmin, vmax = evolucao.evoluir()
@@ -145,4 +145,13 @@ while 1:
 
 x = valores(populacao.populacao)
 sequence = x[-1, :]
-lm.plot(startpoint, sequence=sequence, save_file="./videos/lab.mp4")
+option = {(1, 2, 1) : 1, (2, 1, 2): 2, (3, 4, 3): 3, (4, 3, 4): 4}
+clean = []
+for i in range(0, sequence.size, 3):
+    tmp = tuple(sequence[i:i+3].tolist())
+    if tmp in options:
+        clean.append(options[tmp])
+    else:
+        clean += list(tmp)
+
+lm.plot(startpoint, sequence=clean, save_file="./videos/lab.mp4")
