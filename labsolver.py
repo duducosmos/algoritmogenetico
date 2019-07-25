@@ -54,14 +54,14 @@ convergencia = premio
 lm = LabMove(img, premio=premio, penalidade=penalidade,
                   moeda=moeda, introns=introns)
 
-tamanho_populacao = 50
+tamanho_populacao = 100
 cromossomos = 2 * 60
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
 bits = 4
 genes = bits * cromossomos
-pmut = 0.01
+pmut = 0.001
 pcruz = 0.6
 epidemia = 500
 elitista = True
