@@ -18,21 +18,41 @@ from pygenic.tools import bcolors, binarray2int
 
 from labmove import LabMove
 from makemaze import make_maze
+from numpy import load, save
 
-width = 10
-img = array(make_maze(w=width, h=width)).astype(int)
-img[img == 0] = -1
-img[img == 255] = 0
+loadorsave = input("Carregar ou Salvar [c/s]: ")
+filname = "./labirinto.npy"
+if loadorsave == "c":
+    img = load(filname)
+    goal = where(img == 255)
+    goal = (goal[0][0], goal[1][0])
+    startpoint = where(img == 100)
+    img[startpoint] = 0
+    startpoint = (startpoint[0][0], startpoint[1][0])
+    s0, s1 = where(img == 0)
+    options = list(zip(s0.tolist(), s1.tolist()))
 
-s0, s1 = where(img == 0)
-options = list(zip(s0.tolist(), s1.tolist()))
-goal = options[random.choice(list(range(len(options))))]
+else:
+    width = 10
+    img = array(make_maze(w=width, h=width)).astype(int)
+    img[img == 0] = -1
+    img[img == 255] = 0
 
-img[goal] = 255
+    s0, s1 = where(img == 0)
+    options = list(zip(s0.tolist(), s1.tolist()))
+    goal = options[random.choice(list(range(len(options))))]
 
-s0, s1 = where(img == 0)
-options = list(zip(s0.tolist(), s1.tolist()))
-startpoint = options[random.choice(list(range(len(options))))]
+    img[goal] = 255
+
+
+    s0, s1 = where(img == 0)
+    options = list(zip(s0.tolist(), s1.tolist()))
+    startpoint = options[random.choice(list(range(len(options))))]
+    img[startpoint] = 100
+    print(startpoint)
+    save(filname, img)
+
+
 size_lab = count_nonzero(img != -1)
 print("Tamanho Lab {}".format(size_lab))
 
@@ -41,20 +61,19 @@ imgview = img.copy().astype(uint8)
 imgview[goal] = 100
 imgview[startpoint] = 50
 
-
-plt.imshow(imgview)
+plt.imshow(imgview, interpolation='none', aspect='auto')
 
 plt.show()
 premio = 100000
 moeda = 1
-penalidade = 100
+penalidade = 0
 convergencia = premio
 
 lm = LabMove(img, premio=premio, penalidade=penalidade,
                   moeda=moeda)
 
 tamanho_populacao = 50
-cromossomos = 8 * size_lab
+cromossomos = size_lab * 8
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
@@ -62,7 +81,7 @@ bits = 2
 genes = bits * cromossomos
 pmut = 0.01
 pcruz = 0.6
-epidemia = 500
+epidemia = 100
 elitista = True
 
 def valores(populacao):
@@ -96,8 +115,8 @@ populacao = Populacao(avaliacao,
 
 selecao = Torneio(populacao, tamanho=tamanho)
 #selecao = Roleta(populacao)
-#cruzamento = KPontos(tamanho_populacao)
-cruzamento = Embaralhamento(tamanho_populacao)
+cruzamento = KPontos(tamanho_populacao)
+#cruzamento = Embaralhamento(tamanho_populacao)
 mutacao = SequenciaReversa(pmut=pmut)
 
 evolucao = Evolucao(populacao,
@@ -145,17 +164,4 @@ while 1:
 
 x = valores(populacao.populacao)
 sequence = x[-1, :]
-option = {(1, 2, 1) : 1, (2, 1, 2): 2, (3, 4, 3): 3, (4, 3, 4): 4}
-clean = []
-nf = sequence.size % 3
-
-for i in range(0, sequence.size - nf, 3):
-    tmp = tuple(sequence[i:i+3].tolist())
-    if tmp in options:
-        clean.append(options[tmp])
-    else:
-        clean += list(tmp)
-
-clean += sequence[-nf:].tolist()
-
-lm.plot(startpoint, sequence=clean, save_file="./videos/lab.mp4")
+lm.plot(startpoint, sequence=sequence, save_file="./videos/lab.mp4")

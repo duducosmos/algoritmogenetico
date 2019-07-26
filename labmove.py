@@ -80,7 +80,7 @@ class LabMove:
         fig = plt.figure()
         img2 = self.R.copy()
         img2[self._endx, self._endy] = 200
-        im = plt.imshow(img2, animated=True)
+        im = plt.imshow(img2, animated=True, interpolation='none', aspect='auto')
 
         self.x, self.y = start
         self._stop = False
@@ -154,13 +154,15 @@ class LabMove:
             else:
                 if self.x != self._endx and self.y != self._endy:
                     visitado[(self.x, self.y)] += 1
-                    pontos -= self._penalidade * visitado[(self.x, self.y)]
 
             if self.x == self._endx and self.y == self._endy:
                 pontos += self._premio
 
-        d = abs(self.x - self._endx) + abs(self.y - self._endy)
-        pontos -= d
+        dist = lambda x, y: 1 + abs(x - self._endx) + abs(y- self._endy)
+
+        penalidade = sum([self._penalidade * visitado[keys] // dist(*keys) for keys in visitado])
+        pontos -= penalidade
+        #pontos -= dist(self.x, self.y)
 
         return pontos
 
