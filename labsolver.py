@@ -65,23 +65,23 @@ plt.imshow(imgview, interpolation='none', aspect='auto')
 
 plt.show()
 premio = 100000
-moeda = 1
-penalidade = 0
-convergencia = premio
+moeda = 0
+penalidade = 1
+convergencia = 0
 
 lm = LabMove(img, premio=premio, penalidade=penalidade,
                   moeda=moeda)
 
 tamanho_populacao = 50
-cromossomos = size_lab * 8
+cromossomos = 4000
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
 bits = 2
 genes = bits * cromossomos
-pmut = 0.001
+pmut = 0.05
 pcruz = 0.6
-epidemia = 100
+epidemia = 1000
 elitista = True
 
 def valores(populacao):
@@ -135,7 +135,7 @@ for i in range(15000):
     print(evolucao.geracao, vmax)
 '''
 improving = False
-maximprov = 10
+maximprov = 100
 cnt = 0
 while 1:
     vmin, vmax = evolucao.evoluir()
@@ -164,4 +164,5 @@ while 1:
 
 x = valores(populacao.populacao)
 sequence = x[-1, :]
+print("Gerando Video")
 lm.plot(startpoint, sequence=sequence, save_file="./videos/lab.mp4")

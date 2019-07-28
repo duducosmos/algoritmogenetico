@@ -133,12 +133,13 @@ class LabMove:
         3 - left
         4 - right
         '''
-        visitado = {tuple(start): 1}
         self.x, self.y = start
         pontos = 0
+        chegou = False
+        position = [[self.x, self.y]]
+        repeticao = {(self.x, self.y): 1}
 
         for step in sequence:
-
             if step == 1:
                 self.move_up()
             elif step == 2:
@@ -148,21 +149,26 @@ class LabMove:
             elif step == 4:
                 self.move_right()
 
-            if (self.x, self.y) not in visitado:
-                pontos += self._moeda
-                visitado[(self.x, self.y)] = 1
+            if (self.x, self.y) not in repeticao:
+                repeticao[(self.x, self.y)] = 1
             else:
-                if self.x != self._endx and self.y != self._endy:
-                    visitado[(self.x, self.y)] += 1
+                repeticao[(self.x, self.y)] += 1
+
+            pontos -= repeticao[(self.x, self.y)]
+
+            position.append([self.x, self.y])
 
             if self.x == self._endx and self.y == self._endy:
                 pontos += self._premio
+                chegou = True
+                break
 
-        dist = lambda x, y: 1 + abs(x - self._endx) + abs(y- self._endy)
-
-        penalidade = sum([self._penalidade * visitado[keys] // dist(*keys) for keys in visitado])
-        pontos -= penalidade
-        #pontos -= dist(self.x, self.y)
+        if chegou is False:
+            np = len(position)
+            dx = sum([position[i + 1][0] - position[i][0] for i in range(0, np - 1)])
+            dy = sum([position[i + 1][1] - position[i][1] for i in range(0, np - 1)])
+            d = int(sqrt(dx ** 2.0 + dy ** 2.0))
+            pontos += d
 
         return pontos
 
