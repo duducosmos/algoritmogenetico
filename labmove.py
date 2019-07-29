@@ -178,8 +178,6 @@ class LabMove:
     
         if chegou is True:
             pontos = (pontos + 10 / steps) ** 2.0
-        else:
-            pontos +=  ds
 
 
         return pontos

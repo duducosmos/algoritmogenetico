@@ -31,6 +31,7 @@ if loadorsave == "c":
     startpoint = (startpoint[0][0], startpoint[1][0])
     s0, s1 = where(img == 0)
     options = list(zip(s0.tolist(), s1.tolist()))
+    print(img)
 
 else:
     width = 10
