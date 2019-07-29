@@ -164,6 +164,7 @@ class LabMove:
             if self.x == self._endx and self.y == self._endy:
                 pontos += self._premio
                 chegou = True
+                print("ch")
                 break
 
         np = len(position)
@@ -173,12 +174,12 @@ class LabMove:
         steps = sum([repeticao[keys] for keys in repeticao])
 
         df = 1 + sqrt((self.x - self._endx) ** 2.0 + (self.y + self._endy) ** 2.0)
-        pontos += 1 / df
+        pontos += 1 / df - steps + ds
     
         if chegou is True:
             pontos = (pontos + 10 / steps) ** 2.0
         else:
-            pontos = (ds / df) ** 2.0
+            pontos +=  ds
 
 
         return pontos
