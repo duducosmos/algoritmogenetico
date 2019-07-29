@@ -138,6 +138,7 @@ class LabMove:
         chegou = False
         position = [[self.x, self.y]]
         repeticao = {(self.x, self.y): 1}
+        ns = 0
 
         for step in sequence:
             if step == 1:
@@ -150,25 +151,35 @@ class LabMove:
                 self.move_right()
 
             if (self.x, self.y) not in repeticao:
-                repeticao[(self.x, self.y)] = 1
+                repeticao[(self.x, self.y)] = 0
             else:
                 repeticao[(self.x, self.y)] += 1
 
-            pontos -= repeticao[(self.x, self.y)]
 
             position.append([self.x, self.y])
+            ns += 1
+            if ns >= self.size_lab * 10:
+                break
 
             if self.x == self._endx and self.y == self._endy:
                 pontos += self._premio
                 chegou = True
                 break
 
-        if chegou is False:
-            np = len(position)
-            dx = sum([position[i + 1][0] - position[i][0] for i in range(0, np - 1)])
-            dy = sum([position[i + 1][1] - position[i][1] for i in range(0, np - 1)])
-            d = int(sqrt(dx ** 2.0 + dy ** 2.0))
-            pontos += d
+        np = len(position)
+        dx = sum([position[i + 1][0] - position[i][0] for i in range(0, np - 1)])
+        dy = sum([position[i + 1][1] - position[i][1] for i in range(0, np - 1)])
+        ds = sqrt(dx ** 2.0 + dy ** 2.0)
+        steps = sum([repeticao[keys] for keys in repeticao])
+
+        df = 1 + sqrt((self.x - self._endx) ** 2.0 + (self.y + self._endy) ** 2.0)
+        pontos += 1 / df
+    
+        if chegou is True:
+            pontos = (pontos + 10 / steps) ** 2.0
+        else:
+            pontos = (ds / df) ** 2.0
+
 
         return pontos
 

@@ -3,6 +3,7 @@ from numpy import array, zeros, where, max, random
 
 
 class QMatrix:
+
     def __init__(self, R, alpha=0.8, verbose=False):
         self.R = R
         self.verbose = verbose
@@ -46,7 +47,7 @@ class QMatrix:
             print("Goal to {}".format(goal))
 
         steps = 0
-        maxsteps = False
+        #maxsteps = False
 
         while e != goal:
             a = e
@@ -55,11 +56,13 @@ class QMatrix:
                 print("Moving from {0} to {1}".format(a, e))
             steps += 1
             if steps >= self._qsteps:
-                maxsteps = True
+                #maxsteps = True
                 steps = self._qsteps * self.nocon
                 if self.verbose is True or verbose is True:
                     print("not reached")
                 break
+            if e == goal:
+                print("Cheguei")
 
         return steps
 
@@ -126,6 +129,8 @@ if __name__ == "__main__":
     e, a, states, goal, R = gen_R(img)
     print(R[R != -1].size)
 
+    startpoint = random.choice(e)
+
     img2 = img.copy()
     img2[goal] = 150
 
@@ -161,14 +166,16 @@ if __name__ == "__main__":
         x = valores(populacao)
         n = len(populacao)
 
-        es = list(set(ql.get_states[0]))
+       # es = list(set(ql.get_states[0]))
         def steps(k):
             Q = zeros(R.shape)
             Q[ql.get_states] = x[k, :]
-            return sum([ql.move(e, Q=Q) for e in es])
+            #return sum([ql.move(e, Q=Q) for e in es])
+            return ql.move(startpoint, Q=Q)
 
-        pool = Pool(nodes=4)
-        peso = -array(list(pool.map(steps, range(n)))).astype(int)
+        #pool = Pool(nodes=4)
+        #peso = -array(list(pool.map(steps, range(n)))).astype(int)
+        peso = -array([steps(k) for k in range(n)]).astype(int)
         return peso
 
     populacao = Populacao(avaliacao,
@@ -201,13 +208,8 @@ if __name__ == "__main__":
         if vmax > -(ql.nocon):
             break
 
-
-
     x = valores(populacao.populacao)
     Q = zeros(R.shape)
     Q[ql.get_states] = x[-1, :]
-    es = list(set(ql.get_states[0]))
-    for e in es:
-        print("\n")
-        ql.move(e, Q=Q, verbose=True)
+    ql.move(startpoint, Q=Q, verbose=True)
     print(evolucao.geracao, vmax)
