@@ -7,11 +7,10 @@ from matplotlib.animation import FuncAnimation, writers
 
 class LabMove:
 
-    def __init__(self, R, premio=100, penalidade=10, moeda=1):
+    def __init__(self, R, premio=100, penalidade=1):
         self.R = R
         self._penalidade = penalidade
         self._premio = premio
-        self._moeda = moeda
         self.size_lab = count_nonzero(R != -1)
         self._x = None
         self._y = None
@@ -133,12 +132,11 @@ class LabMove:
         3 - left
         4 - right
         '''
-        visitado = {tuple(start): 1}
+        visitado = {tuple(start): 0}
         self.x, self.y = start
         pontos = 0
 
         for step in sequence:
-
             if step == 1:
                 self.move_up()
             elif step == 2:
@@ -149,18 +147,15 @@ class LabMove:
                 self.move_right()
 
             if (self.x, self.y) not in visitado:
-                pontos += self._moeda
                 visitado[(self.x, self.y)] = 1
             else:
-                if self.x != self._endx and self.y != self._endy:
-                    visitado[(self.x, self.y)] += 1
-                    pontos -= self._penalidade * visitado[(self.x, self.y)]
+                visitado[(self.x, self.y)] *= 2
+
+            pontos -= self._penalidade * visitado[(self.x, self.y)]
 
             if self.x == self._endx and self.y == self._endy:
                 pontos += self._premio
-
-        d = abs(self.x - self._endx) + abs(self.y - self._endy)
-        pontos -= d
+                break
 
         return pontos
 

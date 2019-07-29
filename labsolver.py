@@ -19,7 +19,7 @@ from pygenic.tools import bcolors, binarray2int
 from labmove import LabMove
 from makemaze import make_maze
 
-width = 10
+width = 14
 img = array(make_maze(w=width, h=width)).astype(int)
 img[img == 0] = -1
 img[img == 255] = 0
@@ -45,22 +45,22 @@ imgview[startpoint] = 50
 plt.imshow(imgview)
 
 plt.show()
-premio = 100000
-moeda = 1
-penalidade = 100
-convergencia = premio
+maxtime = 100
+premio = 10000
+penalidade = 1
+convergencia = -maxtime
 
-lm = LabMove(img, premio=premio, penalidade=penalidade,
-                  moeda=moeda)
+lm = LabMove(img, premio=premio, penalidade=penalidade)
 
-tamanho_populacao = 50
-cromossomos = 8 * size_lab
+tamanho_populacao = 1000
+print(tamanho_populacao)
+cromossomos = 4 * maxtime
 
 tamanho = int(0.1 * tamanho_populacao)
 tamanho = tamanho if tamanho_populacao > 20 else 5
 bits = 2
 genes = bits * cromossomos
-pmut = 0.001
+pmut = 0.05
 pcruz = 0.6
 epidemia = 500
 elitista = True
@@ -69,7 +69,7 @@ def valores(populacao):
     bx = hsplit(populacao, cromossomos)
     #x = [binarray2int(xi) for xi in bx]
     const = 2 ** bits - 1
-    const = (3)/ const
+    const = 3 / const
     x = [1 + const * binarray2int(xi) for xi in bx]
     x = concatenate(x).T.astype(int)
     return x
@@ -129,7 +129,7 @@ while 1:
         lm.plot(startpoint, sequence=sequence, interval=1)
     '''
 
-    if vmax >= convergencia and improving is False:
+    if vmax > convergencia and improving is False:
         improving = True
         evolucao.epidemia = None
         print("improving")
@@ -145,17 +145,5 @@ while 1:
 
 x = valores(populacao.populacao)
 sequence = x[-1, :]
-option = {(1, 2, 1) : 1, (2, 1, 2): 2, (3, 4, 3): 3, (4, 3, 4): 4}
-clean = []
-nf = sequence.size % 3
 
-for i in range(0, sequence.size - nf, 3):
-    tmp = tuple(sequence[i:i+3].tolist())
-    if tmp in options:
-        clean.append(options[tmp])
-    else:
-        clean += list(tmp)
-
-clean += sequence[-nf:].tolist()
-
-lm.plot(startpoint, sequence=clean, save_file="./videos/lab.mp4")
+lm.plot(startpoint, sequence=sequence, save_file="./videos/lab.mp4")
