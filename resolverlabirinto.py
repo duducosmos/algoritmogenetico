@@ -6,6 +6,9 @@ Resolver Labirinto
 
 
 from numpy import load, save, where, array, random, hsplit, concatenate
+from pathos.multiprocessing import ProcessingPool as Pool
+from pathos.helpers import cpu_count
+import matplotlib.pyplot as plt
 
 from pygenic.populacao import Populacao
 from pygenic.selecao.torneio import Torneio
@@ -19,7 +22,6 @@ from pygenic.tools import bcolors, binarray2int
 
 from labgrafo import LabGrafo
 from makemaze import make_maze
-import matplotlib.pyplot as plt
 
 loadorsave = input("Carregar ou Salvar [c/s]: ")
 filname = "./labirinto_grap.npy"
@@ -68,8 +70,9 @@ cromossomos = len(labgrafo.nos)
 tamanho = int(0.1 * tamanho_populacao)
 bits = 4
 genes = bits * cromossomos
-pmut = 0.01
+pmut = 0.1
 pcruz = 0.6
+epidemia = 25
 elitista = True
 
 def valores(populacao):
@@ -87,10 +90,15 @@ def avaliacao(populacao):
 
     def steps(k):
         individuo = x[k, :]
-        t =  labgrafo.avaliacao(individuo, startpoint, goal)
+        t =  labgrafo.avaliacao(individuo, startpoint, goal, upcaminho=False)
         return t
 
-    peso = array([steps(k) for k in range(n)])
+    peso = None
+    ncpu = cpu_count()
+    with Pool(ncpu) as pool:
+        peso = array(pool.map(steps, range(n)))
+
+    #peso = array([steps(k) for k in range(n)])
     return peso
 
 populacao = Populacao(avaliacao,
@@ -109,8 +117,9 @@ evolucao = Evolucao(populacao,
 evolucao.nsele = tamanho
 evolucao.pcruz = pcruz
 evolucao.manter_melhor = elitista
+evolucao.epidemia = epidemia
 
-for i in range(10):
+for i in range(100):
     vmin, vmax = evolucao.evoluir()
     print(evolucao.geracao, vmax, vmin)
 

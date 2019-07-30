@@ -72,7 +72,7 @@ convergencia = premio
 
 lm = LabMove(img, premio=premio, penalidade=penalidade)
 
-tamanho_populacao = 50
+tamanho_populacao = 1000
 cromossomos = 4000
 
 tamanho = int(0.1 * tamanho_populacao)

@@ -3,7 +3,7 @@
 '''
 Converte Labiritno em um grafo.
 '''
-from numpy import array, where, random
+from numpy import array, where, random, log
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, writers
 import networkx as nx
@@ -38,7 +38,7 @@ class LabGrafo:
         return nome_no
 
 
-    def avaliacao(self, individuo, inicio, meta):
+    def avaliacao(self, individuo, inicio, meta, upcaminho=True):
         '''
         Dado um indivíduo, verifica se o mesmo representa uma solução
         para o labirinto.
@@ -72,15 +72,19 @@ class LabGrafo:
                 break
 
         if chegou is False:
-            total += len(caminho) / 100000
+            total += log(len(caminho)) / 10000
         else:
             total = 1.0 / len(caminho)
 
-        self._caminho = caminho
+        if upcaminho is True:
+            self._caminho = caminho
 
         return total
 
-    def plot(self, individuo, inicio, meta, save_file=None):
+    def plot(self, individuo, inicio, meta, save_file=None, interval=100):
+        '''
+        Gera um vídeo do percurso definido pelos genes de um dado indivíduo.
+        '''
         self.avaliacao(individuo, inicio, meta)
 
         i_fim, j_fim = meta
@@ -92,11 +96,12 @@ class LabGrafo:
         img[img == 0] = 255
         img[img == -1] = 0
         img[inicio] = 0
-        
+
         im = plt.imshow(img, animated=True, interpolation='none', aspect='auto')
 
         def updatefig(frame):
             img = self._img.copy()
+            img[inicio] = 0
             img[img == 0] = 255
             img[img == -1] = 0
             img[i_fim, j_fim] = 200
@@ -108,7 +113,7 @@ class LabGrafo:
         ani = FuncAnimation(fig,
                             updatefig,
                             frames=len(self.caminho),
-                            interval=50,
+                            interval=interval,
                             blit=True)
 
         if save_file is not None:
