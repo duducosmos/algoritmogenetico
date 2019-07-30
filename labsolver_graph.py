@@ -19,9 +19,12 @@ from pygenic.tools import bcolors, binarray2int
 from labmove import LabMove
 from makemaze import make_maze
 from numpy import load, save
+import networkx as nx
+import time
+import os
 
 
-def _mout_edges(nodes):
+def mout_edges(nodes):
     """Find edges using vertices representing xy position vertices."""
     n = nodes.shape[0]
     edges = []
@@ -37,6 +40,18 @@ def _mout_edges(nodes):
                  edges.append([i, j])
     return array(edges)
 
+def create_graph(img):
+    no_zeros = where(img != -1)
+    nodes = list(zip(no_zeros[0], no_zeros[1]))
+    nnodes = len(nodes)
+    nodes = array(nodes)
+    edges = mout_edges(nodes)
+    graph = nx.Graph()
+    nodes_names = list(range(nnodes - 1))
+    graph.add_nodes_from(nodes_names)
+    graph.add_edges_from(edges)
+    return nodes, nodes_names, graph
+
 loadorsave = input("Carregar ou Salvar [c/s]: ")
 filname = "./labirinto_grap.npy"
 if loadorsave == "c":
@@ -50,7 +65,7 @@ if loadorsave == "c":
     options = list(zip(s0.tolist(), s1.tolist()))
 
 else:
-    width = 7
+    width = 25
     img = array(make_maze(w=width, h=width)).astype(int)
     img[img == 0] = -1
     img[img == 255] = 0
@@ -69,17 +84,42 @@ else:
     print(startpoint)
     save(filname, img)
 
-nlines, ncols = img.shape
-tmp = img.copy()
-tmp[goal] = 0
-print(tmp)
-#plt.imshow(tmp, interpolation='none', aspect='auto')
-#plt.show()
 
-no_zeros = where(tmp != -1)
-nodes = list(zip(no_zeros[0], no_zeros[1]))
-nnodes = len(nodes)
-nodes = array(nodes)
-edges = _mout_edges(nodes)
-print("\n")
-print(edges)
+nodes, nodes_names, graph = create_graph(img)
+
+def avaliacao(ind):
+    a = nodes == startpoint
+    start = nodes_names[where((a[:,0] == True) & (a[:,1] == True))[0][0]]
+    a = nodes == goal
+    end = nodes_names[where((a[:,0] == True) & (a[:,1] == True))[0][0]]
+    path = [start]
+    current = start
+    chegou = False
+    d = 0
+    i0 = 0
+
+    while True:
+        possibles = {ng for ng in graph.neighbors(current)}
+        possibles = list(possibles - set(path))
+        nposs = len(possibles)
+        if nposs > 0:
+            vs = ind[i0: i0 + nposs]
+            v = possibles[where(vs == max(vs))[0][0]]
+            i0 += nposs
+            path.append(v)
+            current = v
+            if current == end:
+                chegou = True
+                break
+        else:
+            break
+
+    if chegou is False:
+        d += 1000
+    d += len(path)
+
+    return 1.0 / d
+
+for i in range(1):
+    ind = random.rand(len(nodes_names))
+    avaliacao(ind)
