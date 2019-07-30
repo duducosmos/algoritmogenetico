@@ -69,8 +69,7 @@ moeda = 0
 penalidade = 1
 convergencia = premio
 
-lm = LabMove(img, premio=premio, penalidade=penalidade,
-                  moeda=moeda)
+lm = LabMove(img, premio=premio, penalidade=penalidade)
 
 tamanho_populacao = 50
 cromossomos = 4000
@@ -88,7 +87,7 @@ def valores(populacao):
     bx = hsplit(populacao, cromossomos)
     #x = [binarray2int(xi) for xi in bx]
     const = 2 ** bits - 1
-    const = (3)/ const
+    const = 3 / const
     x = [1 + const * binarray2int(xi) for xi in bx]
     x = concatenate(x).T.astype(int)
     return x
@@ -148,7 +147,7 @@ while 1:
         lm.plot(startpoint, sequence=sequence, interval=1)
     '''
 
-    if vmax >= convergencia and improving is False:
+    if vmax > convergencia and improving is False:
         improving = True
         evolucao.epidemia = None
         print("improving")
