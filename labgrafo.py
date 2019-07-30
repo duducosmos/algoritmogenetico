@@ -72,7 +72,7 @@ class LabGrafo:
                 break
 
         if chegou is False:
-            total += log(len(caminho)) / 10000
+            total += len(caminho) ** 2.0 / 1e9
         else:
             total = 1.0 / len(caminho)
 

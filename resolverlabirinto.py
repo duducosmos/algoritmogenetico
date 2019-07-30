@@ -37,7 +37,7 @@ if loadorsave == "c":
     options = list(zip(s0.tolist(), s1.tolist()))
 
 else:
-    width = 14
+    width = 20
     img = array(make_maze(w=width, h=width)).astype(int)
     img[img == 0] = -1
     img[img == 255] = 0
