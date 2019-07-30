@@ -4,6 +4,8 @@
 Converte Labiritno em um grafo.
 '''
 from numpy import array, where, random
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, writers
 import networkx as nx
 
 
@@ -11,6 +13,7 @@ class LabGrafo:
     def __init__(self, img):
         self._img = img
         self._nos, self._nome_nos, self._grafo = self._criar_grafo()
+        self._caminho = None
 
     def _criar_grafo(self):
         '''
@@ -49,14 +52,14 @@ class LabGrafo:
         i0 = 0
 
         while True:
-            possibilidades = {ng for ng in graph.neighbors(atual)}
+            possibilidades = {ng for ng in  self._grafo.neighbors(atual)}
             possibilidades = list(possibilidades - set(caminho))
             nposs = len(possibilidades)
             if nposs > 1:
                 genes = individuo[i0: i0 + nposs]
                 escolhido = possibilidades[where(genes == max(genes))[0][0]]
                 i0 += nposs
-                caminho.append(v)
+                caminho.append(escolhido)
                 atual = escolhido
             elif nposs == 1:
                 caminho += possibilidades
@@ -69,11 +72,56 @@ class LabGrafo:
                 break
 
         if chegou is False:
-            d += 1000
-        d += len(path)
+            total += len(caminho) / 100000
+        else:
+            total = 1.0 / len(caminho)
 
-        return 1.0 / d
+        self._caminho = caminho
 
+        return total
+
+    def plot(self, individuo, inicio, meta, save_file=None):
+        self.avaliacao(individuo, inicio, meta)
+
+        i_fim, j_fim = meta
+
+        fig = plt.figure()
+        img = self._img.copy()
+
+        img[i_fim, j_fim] = 200
+        img[img == 0] = 255
+        img[img == -1] = 0
+        img[inicio] = 0
+        
+        im = plt.imshow(img, animated=True, interpolation='none', aspect='auto')
+
+        def updatefig(frame):
+            img = self._img.copy()
+            img[img == 0] = 255
+            img[img == -1] = 0
+            img[i_fim, j_fim] = 200
+            atl = self._nos[self.caminho[frame]]
+            img[atl[0], atl[1]] = 100
+            im.set_array(img)
+            return im,
+
+        ani = FuncAnimation(fig,
+                            updatefig,
+                            frames=len(self.caminho),
+                            interval=50,
+                            blit=True)
+
+        if save_file is not None:
+            Writer = writers['ffmpeg']
+            writer = Writer(fps=29, metadata=dict(artist='Me'), bitrate=1800)
+            ani.save(save_file, writer=writer)
+        else:
+            plt.show()
+
+
+    @property
+    def caminho(self):
+        return self._caminho
 
     @property
     def nos(self):
@@ -113,41 +161,3 @@ class LabGrafo:
                      abs(nos[i, 1] - nos[j, 1]) == 1:
                      vertices.append([i, j])
         return array(vertices)
-
-if __name__ == "__main__":
-    from makemaze import make_maze
-    loadorsave = input("Carregar ou Salvar [c/s]: ")
-    filname = "./labirinto_grap.npy"
-    if loadorsave == "c":
-        img = load(filname)
-        goal = where(img == 255)
-        goal = (goal[0][0], goal[1][0])
-        startpoint = where(img == 100)
-        img[startpoint] = 0
-        startpoint = (startpoint[0][0], startpoint[1][0])
-        s0, s1 = where(img == 0)
-        options = list(zip(s0.tolist(), s1.tolist()))
-
-    else:
-        width = 25
-        img = array(make_maze(w=width, h=width)).astype(int)
-        img[img == 0] = -1
-        img[img == 255] = 0
-
-        s0, s1 = where(img == 0)
-        options = list(zip(s0.tolist(), s1.tolist()))
-        goal = options[random.choice(list(range(len(options))))]
-
-        img[goal] = 255
-
-
-        s0, s1 = where(img == 0)
-        options = list(zip(s0.tolist(), s1.tolist()))
-        startpoint = options[random.choice(list(range(len(options))))]
-        img[startpoint] = 100
-        print(startpoint)
-        save(filname, img)
-
-    labgrafo = LabGrafo(img)
-    ind = random.rand(len(labgrafo.nos))
-    labgrafo.avaliacao(ind, startpoint, goal)
