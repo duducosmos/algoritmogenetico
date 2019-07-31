@@ -30,9 +30,14 @@ if loadorsave == "c":
     img = load(filname)
     goal = where(img == 255)
     goal = (goal[0][0], goal[1][0])
+    goal = (img.shape[0]- 2, 1)
     startpoint = where(img == 100)
     img[startpoint] = 0
     startpoint = (startpoint[0][0], startpoint[1][0])
+    startpoint = (1, 1)
+
+
+
     s0, s1 = where(img == 0)
     options = list(zip(s0.tolist(), s1.tolist()))
 
@@ -45,6 +50,7 @@ else:
     s0, s1 = where(img == 0)
     options = list(zip(s0.tolist(), s1.tolist()))
     goal = options[random.choice(list(range(len(options))))]
+
 
     img[goal] = 255
 
@@ -65,9 +71,9 @@ plt.show()
 
 labgrafo = LabGrafo(img)
 
-tamanho_populacao = 100
+tamanho_populacao = 30
 cromossomos = len(labgrafo.nos)
-tamanho = int(0.1 * tamanho_populacao)
+tamanho = int(0.1 * tamanho_populacao) if tamanho_populacao > 10 else 5
 bits = 4
 genes = bits * cromossomos
 pmut = 0.1
@@ -119,11 +125,22 @@ evolucao.pcruz = pcruz
 evolucao.manter_melhor = elitista
 evolucao.epidemia = epidemia
 
-for i in range(100):
+for i in range(150):
     vmin, vmax = evolucao.evoluir()
+
     print(evolucao.geracao, vmax, vmin)
+    if evolucao.geracao % epidemia == 0:
+        x = valores(populacao.populacao)
+        individuo = x[-1, :]
+        print("Gerando Video")
+        fnome = "./videos/Evolucao/lab_{}.mp4".format(evolucao.geracao)
+        labgrafo.plot(individuo, startpoint, goal, geracao=evolucao.geracao,
+                      save_file=fnome)
+    if vmax >=  0.003:
+        break
 
 x = valores(populacao.populacao)
 individuo = x[-1, :]
 print("Gerando Video")
-labgrafo.plot(individuo, startpoint, goal, save_file="./videos/lab.mp4")
+fnome = "./videos/Evolucao/lab_{}.mp4".format(evolucao.geracao)
+labgrafo.plot(individuo, startpoint, goal, geracao=evolucao.geracao, save_file=fnome)

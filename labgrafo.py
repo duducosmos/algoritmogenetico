@@ -81,7 +81,7 @@ class LabGrafo:
 
         return total
 
-    def plot(self, individuo, inicio, meta, save_file=None, interval=100):
+    def plot(self, individuo, inicio, meta, geracao=None, save_file=None, interval=100):
         '''
         Gera um vídeo do percurso definido pelos genes de um dado indivíduo.
         '''
@@ -89,7 +89,7 @@ class LabGrafo:
 
         i_fim, j_fim = meta
 
-        fig = plt.figure()
+        fig, ax = plt.subplots()
         img = self._img.copy()
 
         img[i_fim, j_fim] = 200
@@ -97,7 +97,7 @@ class LabGrafo:
         img[img == -1] = 0
         img[inicio] = 0
 
-        im = plt.imshow(img, animated=True, interpolation='none', aspect='auto')
+        im = ax.imshow(img, animated=True, interpolation='none', aspect='auto')
 
         def updatefig(frame):
             img = self._img.copy()
@@ -107,6 +107,9 @@ class LabGrafo:
             img[i_fim, j_fim] = 200
             atl = self._nos[self.caminho[frame]]
             img[atl[0], atl[1]] = 100
+            if geracao is not None:
+                label = "Geração {}".format(geracao)
+                ax.set_title(label)
             im.set_array(img)
             return im,
 
@@ -114,7 +117,7 @@ class LabGrafo:
                             updatefig,
                             frames=len(self.caminho),
                             interval=interval,
-                            blit=True)
+                            blit=False)
 
         if save_file is not None:
             Writer = writers['ffmpeg']
