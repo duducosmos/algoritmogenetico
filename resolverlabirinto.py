@@ -4,7 +4,6 @@
 Resolver Labirinto
 '''
 
-
 from numpy import load, save, where, array, random, hsplit, concatenate
 from pathos.multiprocessing import ProcessingPool as Pool
 from pathos.helpers import cpu_count
@@ -78,7 +77,7 @@ bits = 4
 genes = bits * cromossomos
 pmut = 0.1
 pcruz = 0.6
-epidemia = 25
+epidemia = 50
 elitista = True
 
 def valores(populacao):
@@ -125,7 +124,7 @@ evolucao.pcruz = pcruz
 evolucao.manter_melhor = elitista
 evolucao.epidemia = epidemia
 
-for i in range(150):
+for i in range(300):
     vmin, vmax = evolucao.evoluir()
 
     print(evolucao.geracao, vmax, vmin)
