@@ -4,7 +4,6 @@
 Resolver Labirinto
 '''
 
-
 from numpy import load, save, where, array, random, hsplit, concatenate
 from pathos.multiprocessing import ProcessingPool as Pool
 from pathos.helpers import cpu_count
