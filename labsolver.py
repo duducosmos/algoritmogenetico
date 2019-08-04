@@ -17,7 +17,7 @@ from pygenic.evolucao import Evolucao
 from pygenic.tools import bcolors, binarray2int
 
 from labmove import LabMove
-from makemaze import make_maze
+from gerarlabirinto import GerarLabirinto
 from numpy import load, save
 
 loadorsave = input("Carregar ou Salvar [c/s]: ")
@@ -34,16 +34,18 @@ if loadorsave == "c":
     print(img)
 
 else:
-    width = 10
-    img = array(make_maze(w=width, h=width)).astype(int)
+    width = 50
+    lab = GerarLabirinto(width)
+    img = array(lab.mapa)
+    print(img)
     img[img == 0] = -1
-    img[img == 255] = 0
+    img[img == 1] = 0
 
     s0, s1 = where(img == 0)
     options = list(zip(s0.tolist(), s1.tolist()))
     goal = options[random.choice(list(range(len(options))))]
 
-    img[goal] = 255
+    img[goal] = 200
 
 
     s0, s1 = where(img == 0)

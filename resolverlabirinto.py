@@ -21,7 +21,7 @@ from pygenic.evolucao import Evolucao
 from pygenic.tools import bcolors, binarray2int
 
 from labgrafo import LabGrafo
-from makemaze import make_maze
+from gerarlabirinto import GerarLabirinto
 
 loadorsave = input("Carregar ou Salvar [c/s]: ")
 filname = "./labirinto_grap.npy"
@@ -30,7 +30,7 @@ if loadorsave == "c":
     img = load(filname)
     goal = where(img == 255)
     goal = (goal[0][0], goal[1][0])
-    goal = (img.shape[0]- 2, 1)
+    goal = (img.shape[0]- 2, img.shape[1]-5)
     startpoint = where(img == 100)
     img[startpoint] = 0
     startpoint = (startpoint[0][0], startpoint[1][0])
@@ -42,10 +42,11 @@ if loadorsave == "c":
     options = list(zip(s0.tolist(), s1.tolist()))
 
 else:
-    width = 20
-    img = array(make_maze(w=width, h=width)).astype(int)
+    width = 40
+    lab = GerarLabirinto(width)
+    img = array(lab.mapa)
     img[img == 0] = -1
-    img[img == 255] = 0
+    img[img == 1] = 0
 
     s0, s1 = where(img == 0)
     options = list(zip(s0.tolist(), s1.tolist()))
@@ -71,14 +72,14 @@ plt.show()
 
 labgrafo = LabGrafo(img)
 
-tamanho_populacao = 30
+tamanho_populacao = 50
 cromossomos = len(labgrafo.nos)
 tamanho = int(0.1 * tamanho_populacao) if tamanho_populacao > 10 else 5
 bits = 4
 genes = bits * cromossomos
 pmut = 0.1
 pcruz = 0.6
-epidemia = 25
+epidemia = 50
 elitista = True
 
 def valores(populacao):
@@ -125,7 +126,7 @@ evolucao.pcruz = pcruz
 evolucao.manter_melhor = elitista
 evolucao.epidemia = epidemia
 
-for i in range(150):
+for i in range(2000):
     vmin, vmax = evolucao.evoluir()
 
     print(evolucao.geracao, vmax, vmin)
